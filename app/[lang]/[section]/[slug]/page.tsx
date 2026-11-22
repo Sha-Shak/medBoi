@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { getGenericInformation, getRecord, relatedMedicines } from '../../../../lib/catalogue';
+import { doctorsAtFacility, getGenericInformation, getPriceFacilities, getRecord, relatedMedicines } from '../../../../lib/catalogue';
 import { isLanguage, isSection, local, recordPath, sections, siteOrigin, words, type Language } from '../../../../lib/content';
 import { imagePath } from '../../../../lib/media';
 import { medicineSections, profileItems, publicText } from '../../../../lib/profile';
 import { jsonLd, seo } from '../../../../lib/seo';
 import { AdSlot, LanguageLink, RecordList, strings, webUrl } from '../../components';
 import { Photo } from '../../photo';
+import { PriceComparison } from '../../price-comparison';
 
 type Props = { params: Promise<{ lang: string; section: string; slug: string }> };
 
@@ -17,7 +18,7 @@ async function load(params: Props['params']) {
   if (!slug.includes('--') || !/^[\w:-]{1,128}$/.test(id)) notFound();
   const row = await getRecord(section, id);
   if (!row) notFound();
-  const path = recordPath(lang, section, id, row.name, row.strength);
+  const path = recordPath(lang, section, row._id, row.name, row.strength);
   if (slug !== decodeURIComponent(path.split('/').at(-1)!)) permanentRedirect(path);
   const name = lang === 'bn' && row.nameBn ? row.nameBn : row.name;
   return { lang, section, id, row, path, name };
@@ -42,6 +43,12 @@ function date(value: unknown, lang: Language) {
   }).format(d);
 }
 
+function telephone(value: unknown) {
+  if (typeof value !== 'string' || !/^\+?[\d ().-]+$/.test(value.trim())) return undefined;
+  const number = value.trim().replace(/[^+0-9]/g, '');
+  return /^\+?\d{7,15}$/.test(number) ? 'tel:' + number : undefined;
+}
+
 function money(value: unknown, lang: Language, currency = 'BDT') {
   if (typeof value !== 'number' || !Number.isFinite(value)) return words[lang].unknown;
   return new Intl.NumberFormat(lang === 'bn' ? 'bn-BD' : 'en-BD', {
@@ -63,15 +70,21 @@ export default async function Detail({ params }: Props) {
   const doctor = section === 'doctors';
   const facility = section === 'facilities';
   const offers = medicine ? row.price?.offers ?? [] : test ? [...(row.prices?.government ?? []), ...(row.prices?.private ?? [])] : [];
-  const available = offers.filter((offer: any) => typeof offer?.price === 'number');
+  const available = offers.filter((offer: any) => typeof offer?.price === 'number' && Number.isFinite(offer.price)
+    && (offer.price > 0 || (test && offer.price === 0 && offer.isFree === true))
+    && (!test || (typeof offer.facilityId === 'string' && offer.facilityId.length > 0)));
   const unique = new Set<string>();
+  const priceFacilities = new Map((test ? await getPriceFacilities(
+    [...new Set<string>(available.map((offer: any) => offer.facilityId))],
+  ) : []).map(facility => [facility._id, facility]));
   const comparison: any[] = available.flatMap((offer: any) => {
+    if (test && !priceFacilities.has(offer.facilityId)) return [];
     const lines = [offer];
     if (test && typeof offer.eligibleGovernmentOrDependentPrice === 'number') {
       lines.push({ ...offer, price: offer.eligibleGovernmentOrDependentPrice, patientCategory: 'eligible', isFree: offer.eligibleGovernmentOrDependentPrice === 0 });
     }
     return lines.filter(line => {
-      const fingerprint = JSON.stringify([line.providerName, line.branchName, line.sample, line.reportTime, line.patientCategory,
+      const fingerprint = JSON.stringify([line.facilityId, line.providerName, line.branchName, line.sample, line.reportTime, line.patientCategory,
         line.price, line.currency, line.packageUnit, line.priceDate || line.updatedAt, line.priceType]);
       if (unique.has(fingerprint)) return false;
       unique.add(fingerprint);
@@ -82,14 +95,15 @@ export default async function Detail({ params }: Props) {
   let label = medicine ? medicineSections(row.labelSections, lang) : [];
   let genericLabel = row.labelScope === 'generic';
   const [related, generic] = medicine ? await Promise.all([
-    relatedMedicines(id, row.genericName).catch(() => []),
+    relatedMedicines(id, row.genericId).catch(() => []),
     !label.length && typeof row.genericId === 'string' ? getGenericInformation(row.genericId).catch(() => null) : null,
   ]) : [[], null];
   if (generic && generic.name === row.genericName) {
     label = medicineSections({ indication: generic.indications, 'therapeutic class': generic.drugClass, ...generic.labelSections }, lang);
     genericLabel = true;
   }
-  const photo = imagePath(section, id, row.picture?.url);
+  const linkedDoctors = facility ? await doctorsAtFacility(id).catch(() => []) : [];
+  const photo = imagePath(section, id, row.picture);
   const profile = row.professionalDetails;
   const doctorGroups = doctor ? [
     { title: t.qualifications, items: [...new Set([...qualified.map(publicText), ...profileItems(profile, 'education')].filter(Boolean))] },
@@ -123,6 +137,14 @@ export default async function Detail({ params }: Props) {
         <p>{[name !== row.name ? row.name : row.nameBn, row.genericName, row.dosageForm, ...designations.slice(0, 2), ...strings(row.specialties)].filter(Boolean).join(' · ')}</p></div>
       <LanguageLink lang={lang} path={path.slice(3)} />
     </header>
+    {(medicine || test || doctor) && <nav className="profile-jumps" aria-label={l('On this page', 'এই পাতায়')}>
+      {(medicine || test) && <a href="#prices" className="pill glass">{t.prices}</a>}
+      {doctor && row.chambers?.length > 0 && <a href="#chambers" className="pill glass">{t.chambers}</a>}
+      {label.length > 0 && <a href="#medicine-information" className="pill glass">{l('Medicine information', 'ওষুধের তথ্য')}</a>}
+      {medicine && row.genericName && <Link prefetch={false} className="pill glass"
+        href={'/' + lang + '/medicines?' + new URLSearchParams({ q: row.genericName })}>
+        {l('Browse this generic', 'এই জেনেরিকের ওষুধ দেখুন')}</Link>}
+    </nav>}
     <section className="glass panel"><h2>{t.keyFacts}</h2><dl className="facts">
       <Fact label={l('Generic', 'জেনেরিক')} value={row.genericName} />
       <Fact label={l('Manufacturer', 'প্রস্তুতকারক')} value={row.manufacturerName} />
@@ -130,6 +152,10 @@ export default async function Detail({ params }: Props) {
       <Fact label={l('Dosage form', 'ওষুধের ধরন')} value={row.dosageForm} />
       <Fact label={l('Pack size', 'প্যাকের আকার')} value={publicText(row.packageSize)} />
       <Fact label={l('DGDA registration number', 'ডিজিডিএ নিবন্ধন নম্বর')} value={row.dgdaRegistry?.registrationNumber} />
+      {medicine && row.dgdaRegistry?.registrationNumber && <Fact label={l('Registration status', 'নিবন্ধনের অবস্থা')}
+        value={row.dgdaEvidenceType === 'registry-snapshot'
+          ? l('Recorded in a registry snapshot. Current status has yet to be confirmed.', 'নিবন্ধনের তথ্য পুরোনো রেকর্ডে আছে। বর্তমান অবস্থা নিশ্চিত করা হয়নি।')
+          : l('Registration number on record. Check current status with DGDA.', 'নিবন্ধন নম্বর তালিকাভুক্ত আছে। বর্তমান অবস্থা ডিজিডিএ-তে যাচাই করুন।')} />}
       <Fact label={l('Registration scope', 'নিবন্ধনের আওতা')} value={row.dgdaRegistry?.registeredFor} />
       <Fact label={t.mrp} value={row.price?.mrp != null ? [money(row.price.mrp, lang, row.price.currency), row.price.mrpPackageUnit].filter(Boolean).join(' · ') : undefined} />
       <Fact label={l('Category', 'বিভাগ')} value={strings(row.categories).join(', ')} />
@@ -156,25 +182,37 @@ export default async function Detail({ params }: Props) {
       <Fact label={l('Phone', 'ফোন')} value={strings(row.contact?.phoneNumbers).join(', ')} />
       <Fact label={l('Email', 'ইমেইল')} value={strings(row.contact?.emails).join(', ') || row.email} />
     </dl></section>
-    {(medicine || test) && <section className="glass panel"><h2>{t.prices}</h2><p className="price-note">{t.caution}</p>
-      {!comparison.length ? <p>{t.noPrices}</p> : <div className="table-scroll"><table>
-        <thead><tr>{test && <th>{t.facility}</th>}<th>{medicine ? t.pack : t.rate}</th><th>{t.price}</th><th>{t.date}</th></tr></thead>
-        <tbody>{comparison.map((offer, i) => <tr key={i}>
-          {test && <td>{offer.facilityId && offer.providerName
-            ? <Link className="table-link" prefetch={false} href={recordPath(lang, 'facilities', offer.facilityId, offer.providerName)}>{offer.providerName}</Link>
-            : offer.providerName || t.unknown}{offer.branchName && <small>{offer.branchName}</small>}</td>}
-          <td>{medicine ? offer.packageUnit || t.unknown : offer.patientCategory === 'eligible' ? t.eligible : offer.patientCategory === 'non-government'
-            ? l('Non-government', 'বেসরকারি রোগী') : offer.patientCategory || t.standard}
-            {!medicine && (offer.sample || offer.reportTime) && <small>{[offer.sample, offer.reportTime].filter(Boolean).join(' · ')}</small>}</td>
-          <td><strong>{offer.isFree ? t.free : money(offer.price, lang, offer.currency)}</strong>
-            {medicine && typeof offer.mrp === 'number' && <small>{t.mrp} {money(offer.mrp, lang, offer.currency)}</small>}</td>
-          <td>{date(offer.priceDate || offer.updatedAt || offer.observedAt, lang) || t.unknown}
-            {offer.priceType === 'historical-snapshot' && <small>{t.historical}</small>}
-            {test && offer.sources?.[0]?.dateBasis === 'observed' && <small>{t.checked}</small>}</td>
-        </tr>)}</tbody>
-      </table></div>}
+    {(medicine || test) && <section className="glass panel" id="prices"><h2>{t.prices}</h2><p className="price-note">{t.caution}</p>
+      {!comparison.length ? <p>{test && offers.length
+        ? l('No prices have been verified for a specific facility here.', 'এই পরীক্ষার জন্য কোনো নির্দিষ্ট প্রতিষ্ঠানের মূল্য যাচাই করা হয়নি।')
+        : t.noPrices}</p> : <PriceComparison lang={lang} test={test} rows={comparison.map((offer, i) => {
+          const linkedFacility = priceFacilities.get(offer.facilityId);
+          const asOf = offer.priceDate || offer.updatedAt || offer.observedAt;
+          const facilityLabel = linkedFacility && (lang === 'bn' ? linkedFacility.nameBn || linkedFacility.name : linkedFacility.name);
+          const pack = offer.packageUnit || t.unknown;
+          return {
+            key: String(i), group: test ? offer.facilityId : pack, groupLabel: facilityLabel || pack,
+            amount: offer.price,
+            comparisonKey: JSON.stringify([offer.currency || 'BDT', test ? offer.patientCategory || 'standard' : pack,
+              test ? offer.sample || '' : offer.priceType || '']),
+            date: asOf && Number.isFinite(new Date(asOf).getTime()) ? new Date(asOf).getTime() : 0,
+            cells: <>
+              {test && <td>{linkedFacility &&
+                <Link className="table-link" prefetch={false} href={recordPath(lang, 'facilities', linkedFacility._id, linkedFacility.name)}>{facilityLabel}</Link>}
+                {offer.branchName && <small>{offer.branchName}</small>}</td>}
+              <td>{medicine ? pack : offer.patientCategory === 'eligible' ? t.eligible : offer.patientCategory === 'non-government'
+                ? l('Non-government', 'বেসরকারি রোগী') : offer.patientCategory || t.standard}
+                {!medicine && (offer.sample || offer.reportTime) && <small>{[offer.sample, offer.reportTime].filter(Boolean).join(' · ')}</small>}</td>
+              <td><strong>{offer.isFree ? t.free : money(offer.price, lang, offer.currency)}</strong>
+                {medicine && typeof offer.mrp === 'number' && <small>{t.mrp} {money(offer.mrp, lang, offer.currency)}</small>}</td>
+              <td>{date(asOf, lang) || t.unknown}
+                {offer.priceType === 'historical-snapshot' && <small>{t.historical}</small>}
+                {test && (offer.dateBasis ?? offer.sources?.[0]?.dateBasis) === 'observed' && <small>{t.checked}</small>}</td>
+            </>,
+          };
+        })} />}
     </section>}
-    {label.length > 0 && <section className="glass panel" aria-label={l('Medicine information', 'ওষুধের তথ্য')}>
+    {label.length > 0 && <section className="glass panel" id="medicine-information" aria-label={l('Medicine information', 'ওষুধের তথ্য')}>
       <h2>{l('Medicine information', 'ওষুধের তথ্য')}</h2>
       <p>{genericLabel
         ? l('These reference notes describe the generic medicine. Ask a doctor or pharmacist about your dose and the exact formulation.',
@@ -199,13 +237,33 @@ export default async function Detail({ params }: Props) {
       </tr></thead><tbody>{facilitySpecialties.map(({ specialty, doctorCount }) =>
         <tr key={specialty}><td>{publicText(specialty)}</td><td>{doctorCount.toLocaleString(lang === 'bn' ? 'bn-BD' : 'en-BD')}</td></tr>)}</tbody></table></div>
     </section>}
-    {doctor && Boolean(row.chambers?.length) && <section className="glass panel"><h2>{t.chambers}</h2>
-      {row.chambers.map((chamber: any, i: number) => <article className="chamber" key={i}><h3>{chamber.facilityId && chamber.name
-        ? <Link prefetch={false} href={recordPath(lang, 'facilities', chamber.facilityId, chamber.name)}>{chamber.name}</Link> : chamber.name}</h3>
-        <p>{[chamber.address, chamber.visitingHours?.raw, chamber.appointmentPhone].filter(Boolean).join(' · ')}</p>
-        {typeof chamber.fee === 'number' && <p>{l('Consultation fee', 'পরামর্শ ফি')} {money(chamber.fee, lang)} · {t.caution}</p>}
-        {webUrl(chamber.mapUrl) && <a href={webUrl(chamber.mapUrl)} rel="noreferrer" target="_blank">{t.maps}</a>}
-      </article>)}
+    {linkedDoctors.length > 0 && <section className="directory">
+      <h2>{l('Doctors with a chamber at this facility', 'এই প্রতিষ্ঠানে চেম্বার আছে এমন চিকিৎসক')}</h2>
+      <p>{l('Selected linked profiles. Confirm availability directly with the facility.',
+        'সংযুক্ত কয়েকজন চিকিৎসকের প্রোফাইল। উপস্থিতি সরাসরি প্রতিষ্ঠান থেকে নিশ্চিত করুন।')}</p>
+      <RecordList lang={lang} section="doctors" rows={linkedDoctors} />
+    </section>}
+    {doctor && Boolean(row.chambers?.length) && <section className="glass panel" id="chambers"><h2>{t.chambers}</h2>
+      <p>{l('Call the chamber to confirm the schedule and availability.', 'সময়সূচি ও সিরিয়াল নিশ্চিত করতে চেম্বারে ফোন করুন।')}</p>
+      <div className="chamber-grid">{row.chambers.map((chamber: any, i: number) => {
+        const phone = telephone(chamber.appointmentPhone);
+        const map = webUrl(chamber.mapUrl);
+        return <article className="chamber chamber-card" key={i}>
+          <h3>{chamber.facilityId && chamber.name
+            ? <Link prefetch={false} href={recordPath(lang, 'facilities', chamber.facilityId, chamber.name)}>{chamber.name}</Link>
+            : chamber.name || l('Chamber', 'চেম্বার')}</h3>
+          {(chamber.address || chamber.room) && <p>{[chamber.address, chamber.room && l('Room ', 'কক্ষ ') + chamber.room].filter(Boolean).join(' · ')}</p>}
+          <dl className="facts">
+            <Fact label={l('Visiting hours', 'রোগী দেখার সময়')} value={chamber.visitingHours?.raw || t.unknown} />
+            <Fact label={l('Consultation fee', 'পরামর্শ ফি')} value={typeof chamber.fee === 'number' ? money(chamber.fee, lang) : undefined} />
+            <Fact label={l('Appointment phone', 'সিরিয়ালের ফোন')} value={chamber.appointmentPhone} />
+          </dl>
+          {(phone || map) && <div className="chamber-actions">
+            {phone && <a className="pill call-chamber" href={phone}>{l('Call for appointment', 'সিরিয়ালের জন্য ফোন করুন')}</a>}
+            {map && <a className="pill" href={map} rel="noreferrer" target="_blank">{t.maps}</a>}
+          </div>}
+        </article>;
+      })}</div>
     </section>}
     {related.length > 0 && <section className="directory"><h2>{l('More brands with this generic', 'এই জেনেরিকের আরও ব্র্যান্ড')}</h2>
       <RecordList lang={lang} section="medicines" rows={related} /></section>}
