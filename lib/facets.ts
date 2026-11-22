@@ -1,8 +1,8 @@
 import { unstable_cache } from 'next/cache';
 import { readCatalogue } from './mongo';
 
-export type FacetKey = 'specialty' | 'city' | 'hospital' | 'manufacturer' | 'form';
-export type FacetOption = { value: string; en: string; bn?: string; city?: string };
+export type FacetKey = 'specialty' | 'city' | 'hospital' | 'manufacturer' | 'form' | 'category' | 'type';
+export type FacetOption = { value: string; en: string; bn?: string; city?: string; matches?: string[] };
 export type Facets = Partial<Record<FacetKey, FacetOption[]>>;
 export type Selections = Partial<Record<FacetKey, string>>;
 
@@ -60,6 +60,67 @@ export const medicineFacets = unstable_cache(async (): Promise<Facets> => readCa
   const [manufacturer, form] = await Promise.all([options('manufacturers', manufacturers), options('dosage_forms', forms)]);
   return { manufacturer, form };
 }), ['medboi-medicine-facets-v1'], { revalidate: 600 });
+
+const categoryNames: Record<string, [string, string]> = {
+  pathology: ['Pathology', 'প্যাথলজি'],
+  'clinical pathology': ['Clinical pathology', 'ক্লিনিক্যাল প্যাথলজি'],
+  radiology: ['Radiology', 'রেডিওলজি'],
+  ultrasound: ['Ultrasound', 'আল্ট্রাসাউন্ড'],
+  'x-ray': ['X-ray', 'এক্স-রে'],
+  'digital x-ray': ['Digital X-ray', 'ডিজিটাল এক্স-রে'],
+  mri: ['MRI', 'এমআরআই'],
+  'ct scan': ['CT scan', 'সিটি স্ক্যান'],
+  endoscopy: ['Endoscopy', 'এন্ডোস্কোপি'],
+  colonoscopy: ['Colonoscopy', 'কোলনোস্কোপি'],
+  hematology: ['Hematology', 'হেমাটোলজি'],
+  biochemistry: ['Biochemistry', 'বায়োকেমিস্ট্রি'],
+  microbiology: ['Microbiology', 'মাইক্রোবায়োলজি'],
+  neurology: ['Neurology', 'নিউরোলজি'],
+  virology: ['Virology', 'ভাইরোলজি'],
+  ecg: ['ECG', 'ইসিজি'],
+  echo: ['Echocardiography', 'ইকোকার্ডিওগ্রাফি'],
+  eeg: ['EEG', 'ইইজি'],
+  vaccination: ['Vaccination', 'টিকাদান'],
+};
+
+const facilityTypeNames: Record<string, [string, string]> = {
+  'private hospital / clinic': ['Private hospital / clinic', 'বেসরকারি হাসপাতাল / ক্লিনিক'],
+  'consultancy & diagnostic center': ['Consultancy & diagnostic center', 'পরামর্শ ও ডায়াগনস্টিক সেন্টার'],
+  'medical college hospital': ['Medical college hospital', 'মেডিকেল কলেজ হাসপাতাল'],
+  'upazila health complex': ['Upazila health complex', 'উপজেলা স্বাস্থ্য কমপ্লেক্স'],
+  'community clinic': ['Community clinic', 'কমিউনিটি ক্লিনিক'],
+  'district hospital': ['District hospital', 'জেলা হাসপাতাল'],
+};
+
+const categoryAliases = new Map([
+  ['haematology', 'hematology'],
+  ['ultrasonography', 'ultrasound'],
+  ['echocardiogram', 'echo'],
+]);
+
+export const directoryTypeFacets = unstable_cache(async (collection: 'diagnostic_tests' | 'facilities'): Promise<Facets> =>
+  readCatalogue(collection, async db => {
+    const test = collection === 'diagnostic_tests';
+    const field = test ? 'categories' : 'type';
+    const values = await db.collection(collection).distinct(field, { [field]: { $type: 'string' } });
+    const options = new Map<string, FacetOption>();
+    for (const original of values) {
+      if (typeof original !== 'string') continue;
+      const normalized = original.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+      if (!normalized) continue;
+      const value = (test ? categoryAliases.get(normalized) : undefined) ?? normalized;
+      const existing = options.get(value);
+      if (existing) {
+        existing.matches?.push(original);
+      } else {
+        const translated = (test ? categoryNames : facilityTypeNames)[value];
+        const en = translated?.[0] ?? (original === original.toUpperCase() && original.length > 4
+          ? original.trim().toLowerCase().replace(/^\p{L}/u, letter => letter.toUpperCase()) : original.trim());
+        options.set(value, { value, en, bn: translated?.[1], matches: [original] });
+      }
+    }
+    return { [test ? 'category' : 'type']: ordered([...options.values()]) };
+  }), ['medboi-directory-type-facets-v1'], { revalidate: 600 });
 
 export function selectedFacets(params: Record<string, unknown>, facets: Facets): Selections {
   const selected: Selections = {};

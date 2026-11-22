@@ -11,6 +11,8 @@ const labels: Record<FacetKey, [string, string]> = {
   hospital: ['Hospital or chamber facility', 'হাসপাতাল বা চেম্বারের প্রতিষ্ঠান'],
   manufacturer: ['Manufacturer', 'প্রস্তুতকারক'],
   form: ['Dosage form', 'ওষুধের ধরন'],
+  category: ['Test category', 'পরীক্ষার বিভাগ'],
+  type: ['Facility type', 'প্রতিষ্ঠানের ধরন'],
 };
 
 function FacetSelect({ name, options, value, lang, cityLabels, onChange }: {

@@ -6,7 +6,7 @@ import { sections, type Section } from './content';
 import type { ImageSection } from './media';
 import type { Picture } from './hosted-photo';
 import { readCatalogue } from './mongo';
-import { doctorFacets, type Selections } from './facets';
+import { directoryTypeFacets, doctorFacets, type Selections } from './facets';
 
 type Row = Document & { _id: string; name: string };
 function readSection<T>(section: Section, read: (collection: Collection<Row>) => Promise<T>) {
@@ -115,6 +115,14 @@ async function browse(section: Section, query: string, page: number, limit = pag
     } else if (selections.hospital) {
       filter['chambers.facilityId'] = selections.hospital;
     }
+  }
+  if (section === 'tests' && selections.category) {
+    const { category } = await directoryTypeFacets('diagnostic_tests');
+    filter.categories = { $in: category?.find(option => option.value === selections.category)?.matches ?? [] };
+  }
+  if (section === 'facilities' && selections.type) {
+    const { type } = await directoryTypeFacets('facilities');
+    filter.type = { $in: type?.find(option => option.value === selections.type)?.matches ?? [] };
   }
   return readSection(section, collection => collection.find(filter, { projection: projection(summaries[section]), maxTimeMS: 5500 })
     .sort({ name: 1, _id: 1 }).skip((page - 1) * limit).limit(limit + 1).toArray());
