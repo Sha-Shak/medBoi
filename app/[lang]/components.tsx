@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { type Document } from 'mongodb';
 import { Adsense } from './ads';
 import { Photo } from './photo';
+import { RecordIcon } from './record-icon';
+import { SearchInput } from './search-input';
 import { imagePath } from '../../lib/media';
 import type { MedicineSearchMode } from '../../lib/catalogue';
 import { local, recordPath, sections, siteOrigin, words, type Language, type Section } from '../../lib/content';
@@ -14,7 +16,7 @@ export function Search({ lang, section, query = '', hero = false, mode = 'all', 
   return <form action={'/' + lang + '/' + (section ?? 'search')} role="search">
     <div className={hero ? 'search glass hero-search' : 'search glass'}>
     <span className="magnify" aria-hidden />
-    <input name="q" type="search" aria-label={t.search} defaultValue={query} maxLength={90}
+    <SearchInput key={query} lang={lang} section={section} label={t.search} initial={query}
       placeholder={section === 'medicines' ? t.placeholder
         : section === 'doctors' ? local(lang, 'Doctor, specialty or chamber', 'চিকিৎসক, বিশেষত্ব বা চেম্বার')
         : section === 'tests' ? local(lang, 'Test name or abbreviation', 'পরীক্ষার নাম বা সংক্ষিপ্ত রূপ')
@@ -44,8 +46,8 @@ export function RecordList({ lang, section, rows }: { lang: Language; section: S
     const photo = imagePath(section, row._id, row.picture);
     const image = photo && section === 'doctors' ? photo + '?size=thumbnail' : photo;
     return <Link key={row._id} className="record glass" prefetch={false} href={recordPath(lang, section, row._id, row.name, row.strength)}>
-      {image ? <Photo src={image} alt="" icon={sections[section].icon} className={'result-photo ' + section} />
-        : <span className={'category-icon ' + section} aria-hidden>{sections[section].icon}</span>}
+      {image ? <Photo src={image} alt="" icon={<RecordIcon section={section} data={row} />} className={'result-photo ' + section} />
+        : <RecordIcon section={section} data={row} />}
       <span className="record-content"><strong>{name}</strong>{parts.length > 0 && <small>{parts.join(' · ')}</small>}</span>
       <span className="chevron" aria-hidden />
     </Link>;
@@ -77,8 +79,8 @@ export function RecordGrid({ lang, section, rows, rail = false }: {
       return <li key={row._id}>
         <Link className={'catalogue-card glass ' + section} prefetch={false}
           href={recordPath(lang, section, row._id, row.name, row.strength)}>
-          {image ? <Photo className={'catalogue-image ' + section} src={image} alt="" icon={sections[section].icon} />
-            : <span className="catalogue-card-icon"><span className={'category-icon ' + section} aria-hidden>{sections[section].icon}</span></span>}
+          {image ? <Photo className={'catalogue-image ' + section} src={image} alt="" icon={<RecordIcon section={section} data={row} />} />
+            : <span className="catalogue-card-icon"><RecordIcon section={section} data={row} /></span>}
           <div className="catalogue-card-copy"><strong>{title}</strong>
             {title !== row.name && <small>{row.name}</small>}
             {details.filter(Boolean).map((value, index) => <small key={index}>{value}</small>)}

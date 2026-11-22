@@ -7,6 +7,7 @@ import { medicineSections, profileItems, publicText } from '../../../../lib/prof
 import { jsonLd, seo } from '../../../../lib/seo';
 import { AdSlot, LanguageLink, RecordList, strings, webUrl } from '../../components';
 import { Photo } from '../../photo';
+import { RecordIcon } from '../../record-icon';
 import { PriceComparison } from '../../price-comparison';
 
 type Props = { params: Promise<{ lang: string; section: string; slug: string }> };
@@ -131,8 +132,8 @@ export default async function Detail({ params }: Props) {
       ] }) }} />}
     <div className="crumbs"><Link href={'/' + lang}>{t.home}</Link><span>/</span><Link href={'/' + lang + '/' + section}>{sections[section][lang]}</Link></div>
     <header className="profile glass">
-      {photo ? <Photo src={photo} alt={name} icon={sections[section].icon} className={'profile-photo ' + section} priority />
-        : <span className={'category-icon ' + section} aria-hidden>{sections[section].icon}</span>}
+      {photo ? <Photo src={photo} alt={name} icon={<RecordIcon section={section} data={row} />} className={'profile-photo ' + section} priority />
+        : <RecordIcon section={section} data={row} />}
       <div><p className="profile-category">{sections[section][lang]}</p><h1>{title}</h1>
         <p>{[name !== row.name ? row.name : row.nameBn, row.genericName, row.dosageForm, ...designations.slice(0, 2), ...strings(row.specialties)].filter(Boolean).join(' · ')}</p></div>
       <LanguageLink lang={lang} path={path.slice(3)} />

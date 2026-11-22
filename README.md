@@ -21,3 +21,9 @@ Keep database and Cloudinary credentials in Vercel environment settings. The sam
 The public app supports optional `ADSENSE_CLIENT` and `ADSENSE_SLOT` values for AdSense. For a sponsored banner, set `SPONSOR_NAME`, `SPONSOR_TITLE_EN`, and an HTTPS `SPONSOR_URL`. `SPONSOR_TITLE_BN` supplies its Bangla headline. [Vercel Hobby terms apply to commercial use](https://vercel.com/docs/plans/hobby).
 
 Run `npm run build` and `npm start` to test a production build locally.
+
+## Search indexes
+
+Autocomplete uses the fields in `lib/suggestion-fields.mjs`. The live clusters have sparse ascending indexes named `public_search_<field>`, with simple collation, on those fields. Create the same indexes on a new catalogue before enabling autocomplete there. The normal search form still works when suggestions are unavailable.
+
+For a region check, compare the function region in Vercel’s project settings with both cluster regions in Atlas. Measure first requests and repeated requests separately. The latter can be served from the app’s cache.

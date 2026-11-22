@@ -214,3 +214,25 @@ img.brand-icon { display: block; width: 38px; height: 38px; background: transpar
   .catalogue-filter-grid { grid-template-columns: 1fr; }
   .catalogue-filters { padding-inline: 12px; }
 }
+
+.search-suggest { min-width: 0; flex: 1; }
+.search .search-suggest input { width: 100%; }
+.hero:has(.search-suggest-list) { overflow: visible; z-index: 2; }
+.hero:has(.search-suggest-list) .halo { inset: 0 0 auto auto; animation: none; }
+.search-suggest-list {
+  position: absolute; z-index: 12; inset: calc(100% + .75rem) 0 auto;
+  margin: 0; padding: .3rem; list-style: none; border-radius: 1rem;
+  border: 1px solid rgba(15, 85, 59, .2); background: white; color: #103c2c;
+  box-shadow: 0 .75rem 2rem rgba(12, 60, 42, .16); max-height: min(55vh, 22rem); overflow: auto;
+}
+.search-suggest-list a { display: grid; gap: .15rem; min-height: 44px; padding: .5rem .75rem; border-radius: .65rem; }
+.search-suggest-list a:hover, .search-suggest-list a:focus-visible { background: #eaf7ef; }
+
+.record-icon svg { width: 58%; height: 58%; }
+.record-icon[data-icon="capsule"], .record-icon[data-icon="drops"] { background: #deeee9; color: #176654; }
+.record-icon[data-icon="injection"], .record-icon[data-icon="spray"] { background: #e5edd7; color: #49602c; }
+.record-icon[data-icon="tube"], .record-icon[data-icon="liquid"] { background: #eaf2dc; color: #3d633e; }
+.catalogue-card-icon .record-icon, .catalogue-image .record-icon { width: 58px; height: 58px; border-radius: 19px; }
+.catalogue-image .photo-fallback { height: 100%; }
+.result-photo .record-icon { width: 100%; height: 100%; border-radius: inherit; }
+.profile > .record-icon { width: 66px; height: 66px; border-radius: 20px; }

@@ -120,9 +120,9 @@ async function browse(section: Section, query: string, page: number, limit = pag
     .sort({ name: 1, _id: 1 }).skip((page - 1) * limit).limit(limit + 1).toArray());
 }
 
-const cachedBrowse = unstable_cache(browse, ['medboi-public-list-v4'], { revalidate: 300 });
+const cachedBrowse = unstable_cache(browse, ['medboi-public-list-v5'], { revalidate: 120 });
 export async function searchCatalogue(section: Section, query: string, page: number, limit = pageSize, mode: MedicineSearchMode = 'all', selections: Selections = {}) {
-  const rows = await (query || Object.keys(selections).length ? browse : cachedBrowse)(section, query, page, limit, mode, selections);
+  const rows = await (page > 5 ? browse : cachedBrowse)(section, query, page, limit, mode, selections);
   return { rows: rows.slice(0, limit), hasMore: rows.length > limit };
 }
 
