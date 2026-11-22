@@ -220,8 +220,9 @@ export default async function Detail({ params }: Props) {
           'এই তথ্য জেনেরিক ওষুধের জন্য। আপনার মাত্রা ও নির্দিষ্ট ওষুধ সম্পর্কে চিকিৎসক বা ফার্মাসিস্টকে জিজ্ঞাসা করুন।')
         : l('Use this information for reference. Ask your doctor or pharmacist about dosing and suitability.',
           'এই তথ্য সহায়ক নির্দেশিকা হিসেবে দেখুন। আপনার মাত্রা ও উপযোগিতা সম্পর্কে চিকিৎসক বা ফার্মাসিস্টকে জিজ্ঞাসা করুন।')}</p>
-      {label.map(({ title, content }, i) => <details className="information" key={title} open={i === 0 || undefined}>
-        <summary>{title}</summary><p lang={/[\u0980-\u09ff]/.test(content) ? 'bn' : 'en'}>{content}</p>
+      {label.map(({ title, html }, i) => <details className="information" key={title} open={i === 0 || undefined}>
+        <summary>{title}</summary>
+        <div className="medicine-label" lang={/[\u0980-\u09ff]/.test(html) ? 'bn' : 'en'} dangerouslySetInnerHTML={{ __html: html }} />
       </details>)}
     </section>}
     {doctorGroups.length > 0 && <section className="glass panel"><h2>{l('Professional profile', 'পেশাগত পরিচিতি')}</h2>

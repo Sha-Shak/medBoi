@@ -236,3 +236,21 @@ img.brand-icon { display: block; width: 38px; height: 38px; background: transpar
 .catalogue-image .photo-fallback { height: 100%; }
 .result-photo .record-icon { width: 100%; height: 100%; border-radius: inherit; }
 .profile > .record-icon { width: 66px; height: 66px; border-radius: 20px; }
+
+.medicine-label { margin-block-start: .65rem; white-space: pre-line; overflow-x: auto; overflow-wrap: anywhere; }
+.medicine-label ol { padding-inline-start: 1.3em; }
+.medicine-label p + p { margin-block-start: .65rem; }
+
+.catalogue-card.tests .catalogue-card-icon {
+  display: grid;
+  place-items: center;
+  min-height: 100px;
+  padding: .6rem;
+  background: #f0f5ec;
+}
+.record-icon[data-icon="xray"], .record-icon[data-icon="scanner"], .record-icon[data-icon="ultrasound"], .record-icon[data-icon="imaging"] {
+  background: #dcece7;
+  color: #226251;
+}
+.record-icon[data-icon="cardiac"], .record-icon[data-icon="blood"] { background: #f2e5df; color: #874739; }
+.record-icon[data-icon="molecular"], .record-icon[data-icon="neuro"] { background: #e4e9db; color: #49613a; }

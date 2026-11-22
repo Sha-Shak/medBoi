@@ -1,4 +1,5 @@
 import { local, type Language } from './content';
+import sanitizeHtml from 'sanitize-html';
 
 export function publicText(value: unknown) {
   return typeof value === 'string' ? value.replace(/(?:https?:\/\/|www\.)\S+/gi, '').trim() : '';
@@ -39,9 +40,14 @@ const labelSections = [
 
 export function medicineSections(row: Record<string, unknown> | undefined, lang: Language) {
   const values = new Map(Object.entries(row ?? {}).map(([key, value]) =>
-    [key.toLowerCase().trim().replace(/_/g, ' ').replace(/\s*&\s*/g, ' and '), publicText(value)]));
+    [key.toLowerCase().trim().replace(/_/g, ' ').replace(/\s*&\s*/g, ' and '), typeof value === 'string' ? value.trim() : '']));
   return labelSections.flatMap(([keys, en, bn]) => {
-    const content = keys.map(key => values.get(key)).find(Boolean);
-    return content ? [{ title: local(lang, en, bn), content }] : [];
+    const html = keys.map(key => values.get(key)).filter(Boolean).map(value => sanitizeHtml(value!, {
+      allowedTags: ['p', 'br', 'div', 'strong', 'b', 'em', 'i', 'u', 'sup', 'sub', 'ul', 'ol', 'li',
+        'table', 'caption', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'dl', 'dt', 'dd', 'h3', 'h4', 'h5', 'h6'],
+      allowedAttributes: { th: ['colspan', 'rowspan', 'scope'], td: ['colspan', 'rowspan'] },
+      textFilter: text => text.replace(/(?:https?:\/\/|www\.)\S+/gi, ''),
+    })).find(Boolean);
+    return html ? [{ title: local(lang, en, bn), html }] : [];
   });
 }

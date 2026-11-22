@@ -5,3 +5,4 @@
 {"timestamp":"00:00:00.894","source":"Server","level":"LOG","message":"  \t- include was updated to add '.next-cleanup-smoke/dev/types/**/*.ts'"}
 {"timestamp":"00:00:00.894","source":"Server","level":"LOG","message":""}
 {"timestamp":"00:00:00.996","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:32:20.592","source":"Server","level":"LOG","message":"  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: \"/Users/sharare/Downloads/HC-ETL/public-app/package.json\")."}
