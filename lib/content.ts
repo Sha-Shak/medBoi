@@ -51,6 +51,7 @@ export function recordPath(lang: Language, section: Section, id: string, name: s
 }
 
 export function siteOrigin() {
+  if (process.env.VERCEL_ENV === 'preview') return undefined;
   const value = process.env.SITE_URL;
   if (!value) return undefined;
   try { const parsed = new URL(value); return ['https:', 'http:'].includes(parsed.protocol) ? parsed.origin : undefined; } catch { return undefined; }

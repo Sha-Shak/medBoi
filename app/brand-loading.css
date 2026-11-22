@@ -1,0 +1,12 @@
+.medboi-loading { display: grid; justify-items: center; gap: 12px; padding: 20px; color: inherit; font-size: .875rem; }
+.medboi-loading-art { position: relative; display: grid; place-items: center; width: 64px; height: 64px; perspective: 210px; }
+.medboi-loading-art img { position: absolute; inset: 0; animation: medboi-reveal 2.6s cubic-bezier(.22,.7,.26,1) infinite; }
+.medboi-loading-book { position: relative; width: 52px; height: 40px; border: 2px solid #447669; border-radius: 5px 5px 7px 7px; background: linear-gradient(90deg, #fbf7e8 48%, #8ba695 49%, #8ba695 51%, #f3efdf 52%); animation: medboi-book 2.6s ease infinite; }
+.medboi-loading-page { position: absolute; left: 50%; top: -2px; width: calc(50% + 2px); height: calc(100% + 4px); border: 2px solid #447669; border-radius: 1px 5px 7px 1px; background: repeating-linear-gradient(180deg, #fbf7e8 0 6px, #dce8d8 6px 7px, #fbf7e8 7px 11px); transform-origin: left center; animation: medboi-turn 2.6s cubic-bezier(.3,.12,.22,1) infinite; }
+@keyframes medboi-turn { 0%, 9% { transform: rotateY(0); } 42%, 100% { transform: rotateY(-180deg); } }
+@keyframes medboi-book { 0%, 32% { opacity: 1; } 49%, 100% { opacity: 0; } }
+@keyframes medboi-reveal { 0%, 32% { opacity: 0; transform: scale(.88); } 53%, 86% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.94); } }
+@media (prefers-reduced-motion: reduce) {
+  .medboi-loading-art img { animation: none; }
+  .medboi-loading-book { display: none; }
+}

@@ -1,4 +1,4 @@
-import '../../../shared/brand-loading.css';
+import '../brand-loading.css';
 
 export default function Loading() {
   return <main id="main" className="shell inner"><div className="medboi-loading" role="status">

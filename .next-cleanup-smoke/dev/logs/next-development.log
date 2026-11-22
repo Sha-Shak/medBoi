@@ -1,61 +1,7 @@
-{"timestamp":"00:00:00.678","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:00:00.678","source":"Server","level":"LOG","message":"  We detected TypeScript in your project and reconfigured your tsconfig.json file for you."}
-{"timestamp":"00:00:00.678","source":"Server","level":"LOG","message":"  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:\n"}
-{"timestamp":"00:00:00.678","source":"Server","level":"LOG","message":"  \t- include was updated to add '.next-cleanup-smoke/types/**/*.ts'"}
-{"timestamp":"00:00:00.678","source":"Server","level":"LOG","message":"  \t- include was updated to add '.next-cleanup-smoke/dev/types/**/*.ts'"}
-{"timestamp":"00:00:00.678","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:00:00.750","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:12:16.959","source":"Server","level":"LOG","message":"✓ Compiled in 65ms"}
-{"timestamp":"00:15:34.702","source":"Server","level":"LOG","message":"✓ Compiled in 27ms"}
-{"timestamp":"00:28:42.308","source":"Server","level":"LOG","message":"✓ Compiled in 6ms"}
-{"timestamp":"12:59:55.469","source":"Server","level":"LOG","message":"✓ Compiled in 100ms"}
-{"timestamp":"13:00:33.723","source":"Server","level":"LOG","message":"✓ Compiled in 6ms"}
-{"timestamp":"13:08:45.933","source":"Server","level":"LOG","message":"✓ Compiled in 34ms"}
-{"timestamp":"13:29:04.235","source":"Server","level":"LOG","message":"✓ Compiled in 64ms"}
-{"timestamp":"37:09:39.671","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:09:43.120","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:02.226","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:03.477","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:04.468","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:07.195","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:08.912","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:11.660","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:16.147","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:23.745","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:30.017","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:31.994","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:35.287","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:10:37.704","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:14:25.766","source":"Server","level":"LOG","message":"✓ Compiled in 348ms"}
-{"timestamp":"37:15:06.296","source":"Server","level":"LOG","message":"✓ Compiled in 7ms"}
-{"timestamp":"37:15:37.472","source":"Server","level":"LOG","message":"✓ Compiled in 7ms"}
-{"timestamp":"37:18:25.805","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:30:52.961","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"37:31:49.575","source":"Server","level":"ERROR","message":"⨯ Error: querySrv ECONNREFUSED _mongodb._tcp.medicines.kyqj81s.mongodb.net"}
-{"timestamp":"37:32:28.052","source":"Server","level":"ERROR","message":"⨯ Error: querySrv ETIMEOUT _mongodb._tcp.directory.ub495zt.mongodb.net"}
-{"timestamp":"37:32:28.057","source":"Server","level":"ERROR","message":"⨯ Error: querySrv ETIMEOUT _mongodb._tcp.directory.ub495zt.mongodb.net"}
-{"timestamp":"37:33:10.793","source":"Server","level":"ERROR","message":"⨯ Error: querySrv ECONNREFUSED _mongodb._tcp.directory.ub495zt.mongodb.net"}
-{"timestamp":"37:36:06.519","source":"Server","level":"LOG","message":"✓ Compiled in 7ms"}
-{"timestamp":"37:58:27.828","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"38:06:53.214","source":"Server","level":"LOG","message":"✓ Compiled in 36ms"}
-{"timestamp":"38:13:23.376","source":"Server","level":"LOG","message":"✓ Compiled in 82ms"}
-{"timestamp":"38:15:33.117","source":"Server","level":"LOG","message":"✓ Compiled in 23ms"}
-{"timestamp":"41:02:51.255","source":"Server","level":"LOG","message":"✓ Compiled in 150ms"}
-{"timestamp":"41:03:57.818","source":"Server","level":"LOG","message":"✓ Compiled in 317ms"}
-{"timestamp":"41:04:14.809","source":"Server","level":"LOG","message":"✓ Compiled in 28ms"}
-{"timestamp":"41:37:16.856","source":"Server","level":"LOG","message":"✓ Compiled in 129ms"}
-{"timestamp":"41:56:24.656","source":"Server","level":"LOG","message":"✓ Compiled in 133ms"}
-{"timestamp":"41:57:14.853","source":"Server","level":"LOG","message":"✓ Compiled in 95ms"}
-{"timestamp":"41:57:14.966","source":"Server","level":"LOG","message":"✓ Compiled in 52ms"}
-{"timestamp":"41:57:42.985","source":"Server","level":"LOG","message":"✓ Compiled in 3ms"}
-{"timestamp":"42:09:20.936","source":"Server","level":"LOG","message":"✓ Compiled in 106ms"}
-{"timestamp":"42:09:53.542","source":"Server","level":"LOG","message":"✓ Compiled in 14ms"}
-{"timestamp":"42:09:53.766","source":"Server","level":"LOG","message":"✓ Compiled in 13ms"}
-{"timestamp":"42:16:27.939","source":"Server","level":"LOG","message":"✓ Compiled in 158ms"}
-{"timestamp":"42:17:12.217","source":"Server","level":"LOG","message":"✓ Compiled in 8ms"}
-{"timestamp":"42:17:12.280","source":"Server","level":"LOG","message":"✓ Compiled in 17ms"}
-{"timestamp":"42:17:28.964","source":"Server","level":"LOG","message":"✓ Compiled in 14ms"}
-{"timestamp":"42:18:27.114","source":"Server","level":"LOG","message":"✓ Compiled in 24ms"}
-{"timestamp":"42:19:53.060","source":"Server","level":"LOG","message":"✓ Compiled in 123ms"}
-{"timestamp":"42:20:45.305","source":"Server","level":"LOG","message":"✓ Compiled in 1ms"}
-{"timestamp":"42:20:45.401","source":"Server","level":"LOG","message":"✓ Compiled in 71ms"}
+{"timestamp":"00:00:00.893","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:00.893","source":"Server","level":"LOG","message":"  We detected TypeScript in your project and reconfigured your tsconfig.json file for you."}
+{"timestamp":"00:00:00.893","source":"Server","level":"LOG","message":"  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:\n"}
+{"timestamp":"00:00:00.894","source":"Server","level":"LOG","message":"  \t- include was updated to add '.next-cleanup-smoke/types/**/*.ts'"}
+{"timestamp":"00:00:00.894","source":"Server","level":"LOG","message":"  \t- include was updated to add '.next-cleanup-smoke/dev/types/**/*.ts'"}
+{"timestamp":"00:00:00.894","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:00.996","source":"Server","level":"LOG","message":""}

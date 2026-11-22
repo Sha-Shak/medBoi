@@ -1,4 +1,4 @@
-import { medicineReferenceStages, medicineReferenceProjection, medicineSearchFields } from '../../shared/medicine-references';
+import { medicineReferenceStages, medicineReferenceProjection, medicineSearchFields } from './shared/medicine-references';
 import type { Collection, Document, Filter } from 'mongodb';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';

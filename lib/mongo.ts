@@ -1,4 +1,4 @@
-import { catalogueDestination } from '../../shared/catalogue-destination';
+import { catalogueDestination } from './shared/catalogue-destination';
 import { MongoClient, MongoNotConnectedError, MongoTopologyClosedError, type Db } from 'mongodb';
 
 const state = globalThis as typeof globalThis & { medBoiPublicConnections?: Map<string, Promise<MongoClient>> };
