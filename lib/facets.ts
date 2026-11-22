@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { readCatalogue } from './mongo';
+import type { Section } from './content';
 
 export type FacetKey = 'specialty' | 'city' | 'hospital' | 'manufacturer' | 'form' | 'category' | 'type';
 export type FacetOption = { value: string; en: string; bn?: string; city?: string; matches?: string[] };
@@ -121,6 +122,12 @@ export const directoryTypeFacets = unstable_cache(async (collection: 'diagnostic
     }
     return { [test ? 'category' : 'type']: ordered([...options.values()]) };
   }), ['medboi-directory-type-facets-v1'], { revalidate: 600 });
+
+export function catalogueFacets(section: Section) {
+  if (section === 'doctors') return doctorFacets();
+  if (section === 'medicines') return medicineFacets();
+  return directoryTypeFacets(section === 'tests' ? 'diagnostic_tests' : 'facilities');
+}
 
 export function selectedFacets(params: Record<string, unknown>, facets: Facets): Selections {
   const selected: Selections = {};

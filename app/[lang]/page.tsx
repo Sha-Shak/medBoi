@@ -3,9 +3,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { featuredDirectory, featuredMedicines } from '../../lib/catalogue';
 import { isLanguage, local, sectionDiscovery, sectionKeys, sections, words, type Language, type Section } from '../../lib/content';
+import { catalogueFacets } from '../../lib/facets';
 import { seo } from '../../lib/seo';
 import { AdSlot, RecordGrid, Search, Sponsor } from './components';
 import { CatalogueRail } from './catalogue-rail';
+import { TypeChipRail } from './type-chip-rail';
 
 export const revalidate = 900;
 
@@ -50,14 +52,18 @@ function HomeDirectory({ lang, section }: { lang: Language; section: Section }) 
       <div><h2 id={'featured-' + section}>{title}</h2><p>{l(info.description[0], info.description[1])}</p></div>
       <Link className="subtle" href={path}>{words[lang].browse} <span aria-hidden>↗</span></Link>
     </div>
-    <nav className="directory-shortcuts" aria-label={l('Suggested searches', 'খোঁজার পরামর্শ')}>
-      {info.examples.map(([query, bn]) => <Link key={query} className="pill" prefetch={false}
-        href={path + '?' + new URLSearchParams({ q: query })}>{l(query, bn)}</Link>)}
-    </nav>
+    <Suspense>
+      <HomeTypeChips lang={lang} section={section} />
+    </Suspense>
     <Suspense fallback={<div className="catalogue-rail-skeleton" aria-hidden />}>
       <FeaturedRecords lang={lang} section={section} title={title} />
     </Suspense>
   </section>;
+}
+
+async function HomeTypeChips({ lang, section }: { lang: Language; section: Section }) {
+  const facets = await catalogueFacets(section).catch(() => null);
+  return facets ? <TypeChipRail lang={lang} section={section} facets={facets} /> : null;
 }
 
 async function FeaturedRecords({ lang, section, title }: { lang: Language; section: Section; title: string }) {
