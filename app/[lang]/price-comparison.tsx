@@ -46,10 +46,10 @@ export function PriceComparison({ lang, test, rows }: { lang: Language; test: bo
       </label>
       <span role="status">{new Intl.NumberFormat(lang).format(visible.length)} {l('rates shown', 'টি মূল্য দেখানো হচ্ছে')}</span>
     </div>}
-    <div className="table-scroll"><table>
-      <thead><tr>{test && <th scope="col">{t.facility}</th>}<th scope="col">{test ? t.rate : t.pack}</th>
+    <div className="table-scroll price-table"><table role="table" aria-label={t.prices}>
+      <thead role="rowgroup"><tr role="row">{test && <th scope="col">{t.facility}</th>}<th scope="col">{test ? t.rate : t.pack}</th>
         <th scope="col">{t.price}</th><th scope="col">{t.date}</th></tr></thead>
-      <tbody>{visible.map(row => <tr key={row.key}>{row.cells}</tr>)}</tbody>
+      <tbody role="rowgroup">{visible.map(row => <tr role="row" key={row.key}>{row.cells}</tr>)}</tbody>
     </table></div>
   </>;
 }

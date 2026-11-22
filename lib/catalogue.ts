@@ -67,6 +67,25 @@ export const getRecord = cache(unstable_cache(async (section: Section, id: strin
 
 const pageSize = 20;
 export type MedicineSearchMode = 'all' | 'brand' | 'generic';
+const testAbbreviations = new Set(['cbc', 'ct', 'ecg', 'eeg', 'esr', 'ett', 'hba1c', 'mri', 'pcr', 'tsh', 'usg']);
+
+function rankedPage(query: string, page: number, limit: number, section: Section): Document[] {
+  const names = ['$name', '$nameBn', ...(section === 'doctors' ? ['$nameEn'] : [])];
+  const patterns = ['^' + escape(query) + '$', '^' + escape(query), escape(query)];
+  return [
+    ...(query ? [{ $set: { _rank: { $switch: {
+      branches: patterns.map((regex, index) => ({
+        case: { $or: names.map(input => ({ $regexMatch: {
+          input: { $convert: { input, to: 'string', onNull: '', onError: '' } }, regex, options: 'i',
+        } })) },
+        then: index,
+      })),
+      default: patterns.length,
+    } } } }] : []),
+    { $sort: { ...(query ? { _rank: 1 } : {}), name: 1, _id: 1 } },
+    { $skip: (page - 1) * limit }, { $limit: limit + 1 },
+  ];
+}
 
 async function browse(section: Section, query: string, page: number, limit = pageSize, mode: MedicineSearchMode = 'all', selections: Selections = {}) {
   const tokens = query.split(' ').filter(Boolean).slice(0, 6);
@@ -87,8 +106,7 @@ async function browse(section: Section, query: string, page: number, limit = pag
       ...(selections.form ? { dosageFormId: selections.form } : {}),
     };
     return db.collection<Row>('medicines').aggregate<Row>([
-      { $match: filter }, { $sort: { name: 1, _id: 1 } },
-      { $skip: (page - 1) * limit }, { $limit: limit + 1 },
+      { $match: filter }, ...rankedPage(query, page, limit, section),
       { $project: projection(summaries.medicines) }, ...medicineReferenceStages,
     ], { maxTimeMS: 5500 }).toArray();
   });
@@ -101,7 +119,11 @@ async function browse(section: Section, query: string, page: number, limit = pag
     }))) : [];
   const filter: Filter<Row> = tokens.length ? {
     $and: tokens.map((token, index) => ({
-      $or: [...fields[section].map(field => ({ [field]: { $regex: escape(token), $options: 'i' } })),
+      $or: [...fields[section].map(field => ({ [field]: {
+        $regex: section === 'tests' && testAbbreviations.has(token.toLowerCase())
+          ? '\\b' + escape(token) + '\\b' : escape(token),
+        $options: 'i',
+      } })),
         ...(specialtyIds[index]?.length ? [{ specialtyIds: { $in: specialtyIds[index] } }] : [])],
     })),
   } : {};
@@ -124,11 +146,12 @@ async function browse(section: Section, query: string, page: number, limit = pag
     const { type } = await directoryTypeFacets('facilities');
     filter.type = { $in: type?.find(option => option.value === selections.type)?.matches ?? [] };
   }
-  return readSection(section, collection => collection.find(filter, { projection: projection(summaries[section]), maxTimeMS: 5500 })
-    .sort({ name: 1, _id: 1 }).skip((page - 1) * limit).limit(limit + 1).toArray());
+  return readSection(section, collection => collection.aggregate<Row>([
+    { $match: filter }, ...rankedPage(query, page, limit, section), { $project: projection(summaries[section]) },
+  ], { maxTimeMS: 5500 }).toArray());
 }
 
-const cachedBrowse = unstable_cache(browse, ['medboi-public-list-v5'], { revalidate: 120 });
+const cachedBrowse = unstable_cache(browse, ['medboi-public-list-v6'], { revalidate: 120 });
 export async function searchCatalogue(section: Section, query: string, page: number, limit = pageSize, mode: MedicineSearchMode = 'all', selections: Selections = {}) {
   const rows = await (page > 5 ? browse : cachedBrowse)(section, query, page, limit, mode, selections);
   return { rows: rows.slice(0, limit), hasMore: rows.length > limit };

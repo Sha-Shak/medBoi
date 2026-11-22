@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { cleanQuery, searchCatalogue } from '../../../lib/catalogue';
 import { isLanguage, local, sectionKeys, sections, words } from '../../../lib/content';
 import { seo } from '../../../lib/seo';
-import { LanguageLink, RecordGrid, Search } from '../components';
+import { RecordGrid, Search } from '../components';
 
 type Props = { params: Promise<{ lang: string }>; searchParams: Promise<{ q?: string }> };
 
@@ -26,7 +26,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
   return <main id="main" className="shell inner">
     <div className="crumbs"><Link href={'/' + lang}>{t.home}</Link><span>/</span><span>{t.search}</span></div>
     <header className="page-head"><div><h1>{query ? t.results : t.search}</h1></div>
-      <LanguageLink lang={lang} path={'/search' + suffix} /></header>
+      </header>
     <Search lang={lang} query={query} />
     {query && <nav className="directory-shortcuts" aria-label={t.directory}>{sectionKeys.map(section =>
       <Link className="pill glass" key={section} href={'/' + lang + '/' + section + suffix}>{sections[section][lang]}</Link>)}</nav>}

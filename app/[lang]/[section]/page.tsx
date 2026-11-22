@@ -6,7 +6,9 @@ import { seo } from '../../../lib/seo';
 import { catalogueFacets, selectedFacets, type Selections } from '../../../lib/facets';
 import { CatalogueFilters } from '../catalogue-filters';
 import { TypeChipRail, typeChips } from '../type-chip-rail';
-import { AdSlot, LanguageLink, RecordGrid, Search } from '../components';
+import { AdSlot, Search } from '../components';
+import { DirectoryResults } from '../directory-results';
+import { recordCard } from '../../../lib/record-card';
 
 type Props = { params: Promise<{ lang: string; section: string }>; searchParams: Promise<Record<string, string | undefined>> };
 
@@ -46,23 +48,32 @@ export default async function Browse({ params, searchParams }: Props) {
   const prefix = '/' + lang;
   const typeFacet = typeChips[section].key;
   const activeType = selections[typeFacet];
-  return <main id="main" className="shell inner">
+  return <main id="main" className="shell inner directory-page">
     <div className="crumbs"><Link href={'/' + lang}>{t.home}</Link><span>/</span><span>{sections[section][lang]}</span></div>
     <header className="page-head"><div><h1>{sections[section][lang]}</h1><p>{local(lang, sectionDiscovery[section].description[0], sectionDiscovery[section].description[1])}</p></div>
-      <LanguageLink lang={lang} path={href(current)} /></header>
-    <TypeChipRail lang={lang} section={section} facets={facets} filters={search()} />
+      </header>
     <Search lang={lang} section={section} query={query} mode={mode}>
       {directoryType ? activeType && <input type="hidden" name={typeFacet} value={activeType} />
         : <CatalogueFilters key={JSON.stringify(selections)} lang={lang} facets={facets} selected={selections}
           resetHref={prefix + href(1, {})} />}
     </Search>
-    {(query || selected) && <h2 className="list-heading">{t.results}{query && <> · {query}</>}</h2>}
-    {rows.length ? <RecordGrid lang={lang} section={section} rows={rows} /> : <p className="glass panel">{t.empty}</p>}
-    <nav className="pager" aria-label={local(lang, 'Catalogue pages', 'নির্দেশিকার পৃষ্ঠা')}>
-      {current > 1 && <Link className="pill glass" href={prefix + href(current - 1)} prefetch={false}>{t.previous}</Link>}
-      <span aria-current="page">{local(lang, 'Page', 'পৃষ্ঠা')} {new Intl.NumberFormat(lang).format(current)}</span>
-      {hasMore && current < 2000 && <Link className="pill glass" href={prefix + href(current + 1)} prefetch={false}>{t.next}</Link>}
-    </nav>
+    <TypeChipRail lang={lang} section={section} facets={facets} filters={search()} />
+    {(query || selected) && <div className="result-heading">
+      <h2>{query || t.results}</h2>
+      <Link className="subtle" href={prefix + '/' + section} prefetch={false}>
+        {local(lang, 'Clear search and filters', 'অনুসন্ধান ও ফিল্টার মুছুন')}
+      </Link>
+    </div>}
+    {current > 1 && <Link className="subtle" href={prefix + href(1)} prefetch={false}>
+      {local(lang, 'Back to first results', 'শুরুর ফলাফলে ফিরে যান')}
+    </Link>}
+    {rows.length ? <DirectoryResults key={href(current)} lang={lang} section={section}
+      initial={rows.map(row => recordCard(lang, section, row))} query={search().toString()}
+      page={current} more={hasMore && current < 2000} directory={prefix + '/' + section} />
+      : <div className="glass panel search-empty"><h2>{local(lang, 'No results', 'কোনো ফলাফল নেই')}</h2>
+        <p>{local(lang, 'Try another name or clear the filters.', 'অন্য নাম দিয়ে খুঁজুন অথবা ফিল্টার মুছুন।')}</p>
+        <Link className="pill" href={prefix + '/' + section}>{local(lang, 'Browse all', 'সব দেখুন')}</Link>
+      </div>}
     {rows.length > 0 && <AdSlot />}
   </main>;
 }

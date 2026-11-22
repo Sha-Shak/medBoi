@@ -5,7 +5,7 @@ import { isLanguage, isSection, local, recordPath, sections, siteOrigin, words, 
 import { imagePath } from '../../../../lib/media';
 import { medicineSections, profileItems, publicText } from '../../../../lib/profile';
 import { jsonLd, seo } from '../../../../lib/seo';
-import { AdSlot, LanguageLink, RecordList, strings, webUrl } from '../../components';
+import { AdSlot, RecordList, strings, webUrl } from '../../components';
 import { Photo } from '../../photo';
 import { RecordIcon } from '../../record-icon';
 import { PriceComparison } from '../../price-comparison';
@@ -122,8 +122,11 @@ export default async function Detail({ params }: Props) {
     ? row.directory.specialtyBreakdown.filter((item: { specialty?: string; doctorCount?: number }) =>
       typeof item?.specialty === 'string' && Number.isSafeInteger(item.doctorCount) && Number(item.doctorCount) > 0) : [];
   const title = [name, medicine ? row.strength : null].filter(Boolean).join(' ');
+  const facilityPhone = facility ? strings(row.contact?.phoneNumbers).map(telephone).find(Boolean) : undefined;
+  const facilityMap = facility && typeof row.address === 'string' && row.address.trim()
+    ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(row.name + ', ' + row.address) : undefined;
   const origin = siteOrigin();
-  return <main id="main" className="shell inner">
+  return <main id="main" className="shell inner record-page">
     {origin && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({ '@context': 'https://schema.org',
       '@type': 'BreadcrumbList', itemListElement: [
         { '@type': 'ListItem', position: 1, name: t.home, item: origin + '/' + lang },
@@ -135,12 +138,18 @@ export default async function Detail({ params }: Props) {
       {photo ? <Photo src={photo} alt={name} icon={<RecordIcon section={section} data={row} />} className={'profile-photo ' + section} priority />
         : <RecordIcon section={section} data={row} />}
       <div><p className="profile-category">{sections[section][lang]}</p><h1>{title}</h1>
-        <p>{[name !== row.name ? row.name : row.nameBn, row.genericName, row.dosageForm, ...designations.slice(0, 2), ...strings(row.specialties)].filter(Boolean).join(' · ')}</p></div>
-      <LanguageLink lang={lang} path={path.slice(3)} />
+        <p>{[name !== row.name ? row.name : row.nameBn, row.genericName, row.dosageForm, row.type,
+          facility ? row.location?.district : undefined, ...designations.slice(0, 2), ...strings(row.specialties)].filter(Boolean).join(' · ')}</p>
+        {(facilityPhone || facilityMap) && <div className="profile-actions">
+          {facilityPhone && <a className="pill" href={facilityPhone}>{l('Call facility', 'প্রতিষ্ঠানে ফোন করুন')}</a>}
+          {facilityMap && <a className="pill" href={facilityMap} target="_blank" rel="noreferrer">{t.maps}</a>}
+        </div>}
+      </div>
     </header>
     {(medicine || test || doctor) && <nav className="profile-jumps" aria-label={l('On this page', 'এই পাতায়')}>
       {(medicine || test) && <a href="#prices" className="pill glass">{t.prices}</a>}
       {doctor && row.chambers?.length > 0 && <a href="#chambers" className="pill glass">{t.chambers}</a>}
+      {doctorGroups.length > 0 && <a href="#professional-profile" className="pill glass">{t.qualifications}</a>}
       {label.length > 0 && <a href="#medicine-information" className="pill glass">{l('Medicine information', 'ওষুধের তথ্য')}</a>}
       {medicine && row.genericName && <Link prefetch={false} className="pill glass"
         href={'/' + lang + '/medicines?' + new URLSearchParams({ q: row.genericName })}>
@@ -198,15 +207,15 @@ export default async function Detail({ params }: Props) {
               test ? offer.sample || '' : offer.priceType || '']),
             date: asOf && Number.isFinite(new Date(asOf).getTime()) ? new Date(asOf).getTime() : 0,
             cells: <>
-              {test && <td>{linkedFacility &&
+              {test && <td data-label={t.facility}>{linkedFacility &&
                 <Link className="table-link" prefetch={false} href={recordPath(lang, 'facilities', linkedFacility._id, linkedFacility.name)}>{facilityLabel}</Link>}
                 {offer.branchName && <small>{offer.branchName}</small>}</td>}
-              <td>{medicine ? pack : offer.patientCategory === 'eligible' ? t.eligible : offer.patientCategory === 'non-government'
+              <td data-label={test ? t.rate : t.pack}>{medicine ? pack : offer.patientCategory === 'eligible' ? t.eligible : offer.patientCategory === 'non-government'
                 ? l('Non-government', 'বেসরকারি রোগী') : offer.patientCategory || t.standard}
                 {!medicine && (offer.sample || offer.reportTime) && <small>{[offer.sample, offer.reportTime].filter(Boolean).join(' · ')}</small>}</td>
-              <td><strong>{offer.isFree ? t.free : money(offer.price, lang, offer.currency)}</strong>
+              <td data-label={t.price}><strong>{offer.isFree ? t.free : money(offer.price, lang, offer.currency)}</strong>
                 {medicine && typeof offer.mrp === 'number' && <small>{t.mrp} {money(offer.mrp, lang, offer.currency)}</small>}</td>
-              <td>{date(asOf, lang) || t.unknown}
+              <td data-label={t.date}>{date(asOf, lang) || t.unknown}
                 {offer.priceType === 'historical-snapshot' && <small>{t.historical}</small>}
                 {test && (offer.dateBasis ?? offer.sources?.[0]?.dateBasis) === 'observed' && <small>{t.checked}</small>}</td>
             </>,
@@ -224,26 +233,6 @@ export default async function Detail({ params }: Props) {
         <summary>{title}</summary>
         <div className="medicine-label" lang={/[\u0980-\u09ff]/.test(html) ? 'bn' : 'en'} dangerouslySetInnerHTML={{ __html: html }} />
       </details>)}
-    </section>}
-    {doctorGroups.length > 0 && <section className="glass panel"><h2>{l('Professional profile', 'পেশাগত পরিচিতি')}</h2>
-      {doctorGroups.map(({ title, items }) => <details className="information" key={title} open={title === t.qualifications || undefined}>
-        <summary>{title}</summary><ul>{items.map(item => <li key={item}>{item}</li>)}</ul>
-      </details>)}
-    </section>}
-    {facilitySpecialties.length > 0 && <section className="glass panel">
-      <h2>{l('Specialties and listed doctors', 'বিশেষত্ব ও তালিকাভুক্ত চিকিৎসক')}</h2>
-      <p>{l('Counts reflect doctors listed for this facility. Confirm availability directly with the facility.',
-        'এই সংখ্যা প্রতিষ্ঠানের তালিকাভুক্ত চিকিৎসকদের ভিত্তিতে। উপস্থিতি সরাসরি প্রতিষ্ঠান থেকে জেনে নিন।')}</p>
-      <div className="table-scroll"><table><thead><tr>
-        <th>{l('Specialty', 'বিশেষত্ব')}</th><th>{l('Listed doctors', 'তালিকাভুক্ত চিকিৎসক')}</th>
-      </tr></thead><tbody>{facilitySpecialties.map(({ specialty, doctorCount }) =>
-        <tr key={specialty}><td>{publicText(specialty)}</td><td>{doctorCount.toLocaleString(lang === 'bn' ? 'bn-BD' : 'en-BD')}</td></tr>)}</tbody></table></div>
-    </section>}
-    {linkedDoctors.length > 0 && <section className="directory">
-      <h2>{l('Doctors with a chamber at this facility', 'এই প্রতিষ্ঠানে চেম্বার আছে এমন চিকিৎসক')}</h2>
-      <p>{l('Selected linked profiles. Confirm availability directly with the facility.',
-        'সংযুক্ত কয়েকজন চিকিৎসকের প্রোফাইল। উপস্থিতি সরাসরি প্রতিষ্ঠান থেকে নিশ্চিত করুন।')}</p>
-      <RecordList lang={lang} section="doctors" rows={linkedDoctors} />
     </section>}
     {doctor && Boolean(row.chambers?.length) && <section className="glass panel" id="chambers"><h2>{t.chambers}</h2>
       <p>{l('Call the chamber to confirm the schedule and availability.', 'সময়সূচি ও সিরিয়াল নিশ্চিত করতে চেম্বারে ফোন করুন।')}</p>
@@ -266,6 +255,26 @@ export default async function Detail({ params }: Props) {
           </div>}
         </article>;
       })}</div>
+    </section>}
+    {doctorGroups.length > 0 && <section className="glass panel" id="professional-profile"><h2>{l('Professional profile', 'পেশাগত পরিচিতি')}</h2>
+      {doctorGroups.map(({ title, items }) => <details className="information" key={title} open={title === t.qualifications || undefined}>
+        <summary>{title}</summary><ul>{items.map(item => <li key={item}>{item}</li>)}</ul>
+      </details>)}
+    </section>}
+    {facilitySpecialties.length > 0 && <section className="glass panel">
+      <h2>{l('Specialties and listed doctors', 'বিশেষত্ব ও তালিকাভুক্ত চিকিৎসক')}</h2>
+      <p>{l('Counts reflect doctors listed for this facility. Confirm availability directly with the facility.',
+        'এই সংখ্যা প্রতিষ্ঠানের তালিকাভুক্ত চিকিৎসকদের ভিত্তিতে। উপস্থিতি সরাসরি প্রতিষ্ঠান থেকে জেনে নিন।')}</p>
+      <div className="table-scroll"><table><thead><tr>
+        <th>{l('Specialty', 'বিশেষত্ব')}</th><th>{l('Listed doctors', 'তালিকাভুক্ত চিকিৎসক')}</th>
+      </tr></thead><tbody>{facilitySpecialties.map(({ specialty, doctorCount }) =>
+        <tr key={specialty}><td>{publicText(specialty)}</td><td>{doctorCount.toLocaleString(lang === 'bn' ? 'bn-BD' : 'en-BD')}</td></tr>)}</tbody></table></div>
+    </section>}
+    {linkedDoctors.length > 0 && <section className="directory">
+      <h2>{l('Doctors with a chamber at this facility', 'এই প্রতিষ্ঠানে চেম্বার আছে এমন চিকিৎসক')}</h2>
+      <p>{l('Selected linked profiles. Confirm availability directly with the facility.',
+        'সংযুক্ত কয়েকজন চিকিৎসকের প্রোফাইল। উপস্থিতি সরাসরি প্রতিষ্ঠান থেকে নিশ্চিত করুন।')}</p>
+      <RecordList lang={lang} section="doctors" rows={linkedDoctors} />
     </section>}
     {related.length > 0 && <section className="directory"><h2>{l('More brands with this generic', 'এই জেনেরিকের আরও ব্র্যান্ড')}</h2>
       <RecordList lang={lang} section="medicines" rows={related} /></section>}

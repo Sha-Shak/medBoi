@@ -8,6 +8,7 @@ import { seo } from '../../lib/seo';
 import { AdSlot, RecordGrid, Search, Sponsor } from './components';
 import { CatalogueRail } from './catalogue-rail';
 import { TypeChipRail } from './type-chip-rail';
+import { RecordIcon } from './record-icon';
 
 export const revalidate = 900;
 
@@ -27,13 +28,17 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   const l = (en: string, bn: string) => local(lang, en, bn);
   return <main id="main" className="shell home">
     <section className="hero glass">
-      <div className="halo" aria-hidden><i /><i /><i /></div>
-      <div className="hero-content"><p className="eyebrow"><span aria-hidden />{t.overline}</p>
-        <h1>{l('Find healthcare in Bangladesh', 'বাংলাদেশে স্বাস্থ্যসেবা খুঁজুন')}</h1><p className="hero-sub">{l('Look up medicines, find doctors and hospitals, and compare medical test prices.', 'ওষুধ, চিকিৎসক ও হাসপাতাল খুঁজুন এবং মেডিকেল পরীক্ষার মূল্য তুলনা করুন।')}</p>
+      <div className="hero-content">
+        <h1>{l('Find healthcare in Bangladesh', 'বাংলাদেশে স্বাস্থ্যসেবা খুঁজুন')}</h1>
+        <p className="hero-sub">{l('Find a medicine, check a test price, or look up a doctor or hospital.',
+          'ওষুধ, পরীক্ষার মূল্য, চিকিৎসক বা হাসপাতাল খুঁজুন।')}</p>
         <Search lang={lang} hero />
-        <div className="popular">{sectionKeys.map(section => <Link key={section}
-          href={'/' + lang + '/' + section} prefetch={false}>{sections[section][lang]}</Link>)}</div>
       </div>
+      <nav className="hero-categories" aria-label={t.directory}>{sectionKeys.map(section => <Link key={section}
+        href={'/' + lang + '/' + section} prefetch={false}>
+        <RecordIcon section={section} data={{}} />
+        <strong>{sections[section][lang]}</strong><span aria-hidden>↗</span>
+      </Link>)}</nav>
     </section>
     {(['medicines', 'doctors', 'tests', 'facilities'] as const).map(section =>
       <HomeDirectory key={section} lang={lang} section={section} />)}
@@ -45,7 +50,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
 function HomeDirectory({ lang, section }: { lang: Language; section: Section }) {
   const l = (en: string, bn: string) => local(lang, en, bn);
   const info = sectionDiscovery[section];
-  const title = l(info.title[0], info.title[1]);
+  const title = sections[section][lang];
   const path = '/' + lang + '/' + section;
   return <section className="directory home-directory" aria-labelledby={'featured-' + section}>
     <div className="section-head">

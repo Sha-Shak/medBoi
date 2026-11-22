@@ -5,6 +5,9 @@ import { Adsense } from './ads';
 import { Photo } from './photo';
 import { RecordIcon } from './record-icon';
 import { SearchInput } from './search-input';
+import { RecordCards } from './record-cards';
+import { recordCard, strings } from '../../lib/record-card';
+export { strings } from '../../lib/record-card';
 import { imagePath } from '../../lib/media';
 import type { MedicineSearchMode } from '../../lib/catalogue';
 import { local, recordPath, sections, siteOrigin, words, type Language, type Section } from '../../lib/content';
@@ -14,7 +17,7 @@ export function Search({ lang, section, query = '', hero = false, mode = 'all', 
 }) {
   const t = words[lang];
   return <form action={'/' + lang + '/' + (section ?? 'search')} role="search">
-    <div className={hero ? 'search glass hero-search' : 'search glass'}>
+    <div className={hero ? 'search hero-search' : 'search'}>
     <span className="magnify" aria-hidden />
     <SearchInput key={query} lang={lang} section={section} label={t.search} initial={query}
       placeholder={section === 'medicines' ? t.placeholder
@@ -27,15 +30,10 @@ export function Search({ lang, section, query = '', hero = false, mode = 'all', 
       <option value="brand">{local(lang, 'Brand', 'ব্র্যান্ড')}</option>
       <option value="generic">{local(lang, 'Generic', 'জেনেরিক')}</option>
     </select>}
-    <button>{t.search}</button>
+    <button type="submit">{t.search}</button>
     </div>
     {children}
   </form>;
-}
-
-export function LanguageLink({ lang, path }: { lang: Language; path: string }) {
-  const other = lang === 'en' ? 'bn' : 'en';
-  return <Link href={'/' + other + path} hrefLang={other} className="subtle">{other === 'bn' ? 'এই পাতাটি বাংলায়' : 'This page in English'}</Link>;
 }
 
 export function RecordList({ lang, section, rows }: { lang: Language; section: Section; rows: (Document & {_id: string; name: string})[] }) {
@@ -57,43 +55,9 @@ export function RecordList({ lang, section, rows }: { lang: Language; section: S
 export function RecordGrid({ lang, section, rows, rail = false }: {
   lang: Language; section: Section; rows: (Document & { _id: string; name: string })[]; rail?: boolean;
 }) {
-  const l = (en: string, bn: string) => local(lang, en, bn);
-  const actions = {
-    medicines: l('View medicine', 'ওষুধ দেখুন'),
-    doctors: l('View profile', 'প্রোফাইল দেখুন'),
-    tests: l('View test prices', 'পরীক্ষার মূল্য দেখুন'),
-    facilities: l('View facility', 'প্রতিষ্ঠান দেখুন'),
-  };
   return <ul className={rail ? 'catalogue-grid catalogue-rail' : 'catalogue-grid'}>
-    {rows.map(row => {
-      const title = lang === 'bn' ? row.nameBn || row.name : row.name;
-      const photo = imagePath(section, row._id, row.picture);
-      const image = photo && section === 'doctors' ? photo + '?size=thumbnail' : photo;
-      const details = section === 'medicines' ? [
-        [row.strength, row.dosageForm].filter(Boolean).join(' · '), row.genericName, row.manufacturerName,
-      ] : section === 'doctors' ? [
-        strings(row.specialties).slice(0, 2).join(' · '), row.chambers?.[0]?.name,
-      ] : section === 'tests' ? strings(row.categories).slice(0, 2) : [
-        row.type, [row.location?.upazila, row.location?.district].filter(Boolean).join(', '),
-      ];
-      return <li key={row._id}>
-        <Link className={'catalogue-card glass ' + section} prefetch={false}
-          href={recordPath(lang, section, row._id, row.name, row.strength)}>
-          {image ? <Photo className={'catalogue-image ' + section} src={image} alt="" icon={<RecordIcon section={section} data={row} />} />
-            : <span className="catalogue-card-icon"><RecordIcon section={section} data={row} /></span>}
-          <div className="catalogue-card-copy"><strong>{title}</strong>
-            {title !== row.name && <small>{row.name}</small>}
-            {details.filter(Boolean).map((value, index) => <small key={index}>{value}</small>)}
-            <span className="catalogue-card-action">{actions[section]} <span aria-hidden>↗</span></span>
-          </div>
-        </Link>
-      </li>;
-    })}
+    <RecordCards section={section} cards={rows.map(row => recordCard(lang, section, row))} />
   </ul>;
-}
-
-export function strings(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && Boolean(item.trim())) : [];
 }
 
 export function webUrl(raw: string | undefined) {

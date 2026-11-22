@@ -48,8 +48,10 @@ export function CatalogueFilters({ lang, facets, selected, resetHref }: {
   const keys = Object.keys(facets) as FacetKey[];
   const cityLabels = new Map(facets.city?.map(city => [city.value, l(city.en, city.bn || city.en)]));
   if (!keys.length) return null;
-  return <fieldset className="catalogue-filters glass">
-    <legend>{l('Filters', 'ফিল্টার')}</legend>
+  const count = Object.values(selected).filter(Boolean).length;
+  return <details className="advanced-filters">
+    <summary>{l('More filters', 'আরও ফিল্টার')}{count > 0 && <span>{new Intl.NumberFormat(lang).format(count)}</span>}</summary>
+    <fieldset className="catalogue-filters" aria-label={l('More filters', 'আরও ফিল্টার')}>
     <div className="catalogue-filter-grid">{keys.map(key => {
       const options = (facets[key] ?? []).filter(option => key !== 'hospital' || !values.city || option.city === values.city || option.value === values.hospital);
       return <FacetSelect key={key} name={key} options={options} value={values[key] || ''} lang={lang} cityLabels={cityLabels} onChange={value => {
@@ -68,5 +70,6 @@ export function CatalogueFilters({ lang, facets, selected, resetHref }: {
       <button className="pill" type="submit">{l('Apply filters', 'ফিল্টার প্রয়োগ করুন')}</button>
       {Object.values(values).some(Boolean) && <Link className="subtle" href={resetHref}>{l('Clear filters', 'ফিল্টার মুছুন')}</Link>}
     </div>
-  </fieldset>;
+    </fieldset>
+  </details>;
 }
