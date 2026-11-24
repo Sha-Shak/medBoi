@@ -214,7 +214,6 @@ img.brand-icon { display: block; width: 38px; height: 38px; background: transpar
 
 .search-suggest { min-width: 0; flex: 1; }
 .search .search-suggest input { width: 100%; }
-.hero:has(.search-suggest-list) { z-index: 2; }
 .search-suggest-list {
   position: absolute; z-index: 12; inset: calc(100% + .75rem) 0 auto;
   margin: 0; padding: .3rem; list-style: none; border-radius: 1rem;
@@ -343,3 +342,9 @@ img.brand-icon { display: block; width: 38px; height: 38px; background: transpar
 .search-suggest-group p, .search-group-empty { padding: .35rem .75rem; color: var(--muted); font-size: .85rem; }
 .search-suggest-list a { overflow-wrap: anywhere; }
 @media (max-width: 560px) { .search-suggest-groups { grid-template-columns: 1fr; } }
+
+.search-interface:has(.search-popover) { z-index: 4; }
+.hero:has(.search-popover) { z-index: 2; }
+.search-interface .search-scope, .hero .search-interface .search-scope { margin: 0 0 .55rem; }
+.search .search-popover { inset: calc(100% + 4px) 0 auto; }
+.search-suggest-status { padding: .8rem .95rem; color: var(--muted); font-size: .88rem; }
