@@ -114,8 +114,9 @@ export function SearchInput({ lang, section, initial, label, placeholder, hero, 
         {matches?.failed ? l('Suggestions are unavailable. Press Search to see results.', 'পরামর্শ দেখানো যায়নি। ফলাফলের জন্য খুঁজুন চাপুন।')
           : l('Finding matches…', 'মিল খোঁজা হচ্ছে…')}
       </p>}
-      {expanded && <div id={id} role="listbox" className={'search-suggest-list search-popover' + (!section ? ' search-suggest-groups' : '')}
-        aria-label={l('Search suggestions', 'অনুসন্ধানের পরামর্শ')}>
+      {expanded && <div className="search-suggest-list search-popover">
+        <div id={id} role="listbox" className={!section ? 'search-suggest-groups' : undefined}
+          aria-label={l('Search suggestions', 'অনুসন্ধানের পরামর্শ')}>
         {groups.map(({ category, options }) => <div className="search-suggest-group" key={category}
           role="group" aria-labelledby={id + '-' + category}>
           <div className="search-suggest-heading" id={id + '-' + category}>{sections[category][lang]}</div>
@@ -127,6 +128,10 @@ export function SearchInput({ lang, section, initial, label, placeholder, hero, 
               </Link>
             </div>) : <p>{l('No quick matches', 'তাৎক্ষণিক মিল নেই')}</p>}
         </div>)}
+        </div>
+        <div className="search-suggest-footer">
+          <button type="submit">{l('See all results', 'সব ফলাফল দেখুন')} <span aria-hidden>↗</span></button>
+        </div>
       </div>}
     </div>
   </div>;

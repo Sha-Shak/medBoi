@@ -10,6 +10,7 @@ import { AdSlot, RecordList, strings, webUrl } from '../../components';
 import { Photo } from '../../photo';
 import { RecordIcon } from '../../record-icon';
 import { PriceComparison } from '../../price-comparison';
+import { CopyRecordLink } from '../../copy-record-link';
 
 type Props = { params: Promise<{ lang: string; section: string; slug: string }> };
 
@@ -141,10 +142,11 @@ export default async function Detail({ params }: Props) {
       <div><p className="profile-category">{sections[section][lang]}</p><h1>{title}</h1>
         <p>{[name !== row.name ? row.name : row.nameBn, row.genericName, row.dosageForm, row.type,
           facility ? row.location?.district : undefined, ...designations.slice(0, 2), ...strings(row.specialties)].filter(Boolean).join(' · ')}</p>
-        {(facilityPhone || facilityMap) && <div className="profile-actions">
+        <div className="profile-actions">
           {facilityPhone && <a className="pill" href={facilityPhone}>{l('Call facility', 'প্রতিষ্ঠানে ফোন করুন')}</a>}
           {facilityMap && <a className="pill" href={facilityMap} target="_blank" rel="noreferrer">{t.maps}</a>}
-        </div>}
+          <CopyRecordLink lang={lang} />
+        </div>
       </div>
     </header>
     {(medicine || test || doctor) && <nav className="profile-jumps" aria-label={l('On this page', 'এই পাতায়')}>

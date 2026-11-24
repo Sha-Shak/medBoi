@@ -4,11 +4,11 @@ import type { Card } from '../../lib/record-card';
 import { Photo } from './photo';
 import { RecordIcon } from './record-icon';
 
-export function RecordCards({ section, cards }: { section: Section; cards: Card[] }) {
+export function RecordCards({ section, cards, onOpen }: { section: Section; cards: Card[]; onOpen?: () => void }) {
   return cards.map(card => {
     const icon = <RecordIcon section={section} data={card.icon} />;
     return <li key={card.id}>
-      <Link className={'catalogue-card ' + section} prefetch={false} href={card.href}>
+      <Link className={'catalogue-card ' + section} prefetch={false} href={card.href} onNavigate={onOpen}>
         <span className="catalogue-card-media">
           {card.thumbnail
             ? <Photo className={'catalogue-image ' + section} src={card.thumbnail} alt="" icon={icon} />

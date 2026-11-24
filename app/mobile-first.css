@@ -185,3 +185,28 @@ body { background: var(--surface); padding-bottom: calc(68px + env(safe-area-ins
   .hero { padding-inline: 15px; }
   .home-directory .section-head > a { max-width: 100px; white-space: normal; }
 }
+
+.directory-top {
+  position: fixed; inset: auto 16px calc(77px + env(safe-area-inset-bottom)) auto; z-index: 4;
+  display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #c5dccb;
+  border-radius: 50%; color: var(--forest); background: #fcfffc; box-shadow: 0 3px 14px #123e341c;
+  cursor: pointer; font-size: 1.15rem;
+}
+.directory-top:hover { background: var(--wash); }
+@media (min-width: 720px) { .directory-top { bottom: 24px; right: 28px; } }
+
+.copy-record-link { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .55rem; min-width: 0; }
+.copy-record-link button { min-height: 44px; background: white; border: 1px solid var(--line); cursor: pointer; }
+.copy-record-link button:hover { background: var(--wash); }
+.copy-record-link span { font-size: .78rem; color: var(--leaf); }
+.copy-record-link input { min-width: 0; max-width: 100%; padding: .45rem; border: 1px solid var(--line); border-radius: 8px; }
+
+.search-suggest-footer {
+  position: sticky; bottom: -.3rem; padding: .45rem; margin: .2rem -.3rem -.3rem;
+  background: white; border-top: 1px solid var(--line);
+}
+.search .search-suggest-footer button {
+  display: flex; align-items: center; justify-content: space-between; gap: .6rem; width: 100%;
+  padding: .5rem .75rem; border-radius: 9px; color: var(--forest); background: var(--wash); font-size: .86rem; text-align: left;
+}
+.search .search-suggest-footer button:hover { background: #dcece1; }

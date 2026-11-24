@@ -1,9 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { local, type Language, type Section } from '../../lib/content';
 import type { Card } from '../../lib/record-card';
 import { RecordCards } from './record-cards';
+
+// Keep only the last directory left through a record link, in this tab.
+let lastDirectory: { key: string; cards: Card[]; nextPage: number | null; offset: number; savedAt: number } | undefined;
 
 export function DirectoryResults({ lang, section, initial, query, page, more }: {
   lang: Language; section: Section; initial: Card[]; query: string; page: number; more: boolean;
@@ -11,9 +14,37 @@ export function DirectoryResults({ lang, section, initial, query, page, more }: 
   const [cards, setCards] = useState(initial);
   const [nextPage, setNextPage] = useState(more ? page + 1 : null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [scrolled, setScrolled] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
+  const grid = useRef<HTMLUListElement>(null);
   const pending = useRef<AbortController | null>(null);
+  const restore = useRef<number>(undefined);
+  const key = JSON.stringify([lang, section, query, page]);
   const l = (en: string, bn: string) => local(lang, en, bn);
+  useLayoutEffect(() => {
+    if (lastDirectory?.key !== key) return;
+    const previous = lastDirectory;
+    lastDirectory = undefined;
+    if (Date.now() - previous.savedAt > 120_000) return;
+    restore.current = previous.offset;
+    setCards(previous.cards);
+    setNextPage(previous.nextPage);
+  }, [key]);
+  useLayoutEffect(() => {
+    if (restore.current === undefined) return;
+    const y = restore.current;
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({ top: y, behavior: 'instant' });
+      restore.current = undefined;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [cards]);
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 850);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
   useEffect(() => () => {
     pending.current?.abort();
     pending.current = null;
@@ -72,7 +103,16 @@ export function DirectoryResults({ lang, section, initial, query, page, more }: 
     return () => observer.disconnect();
   }, [load, nextPage, status]);
   return <>
-    <ul className="catalogue-grid" aria-busy={status === 'loading'}><RecordCards section={section} cards={cards} /></ul>
+    <ul className="catalogue-grid" aria-busy={status === 'loading'} ref={grid}>
+      <RecordCards section={section} cards={cards} onOpen={() => {
+        lastDirectory = { key, cards, nextPage, offset: window.scrollY, savedAt: Date.now() };
+      }} />
+    </ul>
+    {scrolled && <button className="directory-top" type="button"
+      aria-label={l('Back to top', 'উপরে ফিরে যান')} onClick={() => {
+        grid.current?.querySelector('a')?.focus({ preventScroll: true });
+        window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+      }}><span aria-hidden>↑</span></button>}
     <div className="directory-more" ref={sentinel}>
       <p role="status">{status === 'loading'
         ? l('Loading more results…', 'আরও ফলাফল লোড হচ্ছে…')
