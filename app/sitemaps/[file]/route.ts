@@ -1,5 +1,7 @@
+import { siteConfig } from '../../../site.config';
+import { siteOrigin } from '../../../lib/site';
 import { sitemapChunkSize, sitemapCounts, sitemapEntries } from '../../../lib/catalogue';
-import { isSection, languages, recordPath, sectionKeys, siteOrigin } from '../../../lib/content';
+import { isSection, languages, recordPath, sectionKeys } from '../../../lib/content';
 
 export const revalidate = 3600;
 const encode = (value: string) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
@@ -9,7 +11,7 @@ const missing = () => new Response('Not found', { status: 404 });
 
 export async function GET(_: Request, { params }: { params: Promise<{ file: string }> }) {
   const origin = siteOrigin();
-  if (!origin) return missing();
+  if (!origin || !siteConfig.seo.indexable) return missing();
   const { file } = await params;
   if (file === 'index.xml') {
     const counts = await Promise.all(sectionKeys.map(section => sitemapCounts(section)));

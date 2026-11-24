@@ -19,8 +19,7 @@ export type Card = {
 export function recordCard(lang: Language, section: Section, row: { _id: string; name: string; [key: string]: any }): Card {
   const title = lang === 'bn' ? row.nameBn || row.name : row.nameEn || row.name;
   const translation = lang === 'bn' ? row.nameEn || row.name : undefined;
-  const photo = imagePath(section, row._id, row.picture);
-  const thumbnail = photo && section === 'doctors' ? photo + '?size=thumbnail' : photo;
+  const thumbnail = imagePath(section, row._id, row.picture);
   const location = [...new Set([row.location?.upazila, row.location?.district].filter(Boolean))].join(', ');
   const eyebrow = {
     medicines: [row.strength, row.dosageForm].filter(Boolean).join(' · '),

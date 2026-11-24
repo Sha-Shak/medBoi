@@ -1,3 +1,4 @@
+import { siteConfig } from '../../site.config';
 import '../brand-loading.css';
 
 export default function Loading() {
@@ -6,7 +7,7 @@ export default function Loading() {
       <span className="medboi-loading-book">
         <span className="medboi-loading-page" />
       </span>
-      <img src="/brand/medboi-mark.png" width={64} height={64} alt="" />
+      {siteConfig.branding.loadingMark && <img src={siteConfig.branding.loadingMark} width={64} height={64} alt="" />}
     </span>
     <span>Loading · লোড হচ্ছে</span>
   </div></main>;

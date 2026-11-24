@@ -1,24 +1,25 @@
+import { siteConfig } from '../../site.config';
+import { siteOrigin } from '../../lib/site';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { featuredDirectory, featuredMedicines } from '../../lib/catalogue';
-import { isLanguage, local, sectionDiscovery, sectionKeys, sections, words, type Language, type Section } from '../../lib/content';
+import { isLanguage, local, sections, words, type Language, type Section } from '../../lib/content';
 import { catalogueFacets } from '../../lib/facets';
-import { seo } from '../../lib/seo';
+import { jsonLd, seo } from '../../lib/seo';
 import { AdSlot, RecordGrid, Search, Sponsor } from './components';
 import { CatalogueRail } from './catalogue-rail';
 import { TypeChipRail } from './type-chip-rail';
 import { RecordIcon } from './record-icon';
+import { searchCategories } from '../../lib/search-scope';
 
 export const revalidate = 900;
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLanguage(lang)) notFound();
-  return seo(lang, '', local(lang, 'Medicine Prices, Doctors & Medical Test Prices in Bangladesh',
-    'বাংলাদেশে ওষুধের দাম, চিকিৎসক ও মেডিকেল পরীক্ষার মূল্য'),
-  local(lang, 'Look up Bangladesh medicine prices by brand or generic, find doctors by specialty and chamber, and compare medical test prices by hospital.',
-    'ব্র্যান্ড বা জেনেরিক দিয়ে ওষুধের দাম খুঁজুন, বিশেষত্ব ও চেম্বার অনুযায়ী চিকিৎসক দেখুন এবং হাসপাতালভেদে পরীক্ষার মূল্য তুলনা করুন।'));
+  const { title, description } = siteConfig.seo.homepage[lang];
+  return seo(lang, '', title, description);
 }
 
 export default async function Home({ params }: { params: Promise<{ lang: string }> }) {
@@ -26,21 +27,28 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   if (!isLanguage(lang)) notFound();
   const t = words[lang];
   const l = (en: string, bn: string) => local(lang, en, bn);
+  const origin = siteOrigin();
   return <main id="main" className="shell home">
+    {origin && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({
+      '@context': 'https://schema.org', '@type': 'WebSite', url: origin + '/', name: siteConfig.name,
+    }) }} />}
     <section className="hero glass">
       <div className="hero-content">
-        <h1>{l('Find healthcare in Bangladesh', 'বাংলাদেশে স্বাস্থ্যসেবা খুঁজুন')}</h1>
-        <p className="hero-sub">{l('Find a medicine, check a test price, or look up a doctor or hospital.',
-          'ওষুধ, পরীক্ষার মূল্য, চিকিৎসক বা হাসপাতাল খুঁজুন।')}</p>
+        <h1>{l('Healthcare, easier to find', 'সহজেই খুঁজুন স্বাস্থ্যসেবার তথ্য')}</h1>
+        <p className="hero-sub">{l('Search medicines, doctors, test prices and hospitals across Bangladesh.',
+          'সারা বাংলাদেশের ওষুধ, চিকিৎসক, পরীক্ষার মূল্য ও হাসপাতাল খুঁজুন।')}</p>
         <Search lang={lang} hero />
       </div>
-      <nav className="hero-categories" aria-label={t.directory}>{sectionKeys.map(section => <Link key={section}
+      </section>
+    <nav className="hero-categories" aria-label={t.directory}>{searchCategories.map(section => <Link key={section}
         href={'/' + lang + '/' + section} prefetch={false}>
         <RecordIcon section={section} data={{}} />
-        <strong>{sections[section][lang]}</strong><span aria-hidden>↗</span>
+        <span className="hero-category-copy">
+          <strong>{sections[section][lang]}</strong>
+          <small>{lang === 'bn' ? sections[section].bnHint : sections[section].enHint}</small>
+        </span><span aria-hidden>↗</span>
       </Link>)}</nav>
-    </section>
-    {(['medicines', 'doctors', 'tests', 'facilities'] as const).map(section =>
+    {searchCategories.map(section =>
       <HomeDirectory key={section} lang={lang} section={section} />)}
     <Sponsor lang={lang} />
     <AdSlot />
@@ -49,12 +57,14 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
 
 function HomeDirectory({ lang, section }: { lang: Language; section: Section }) {
   const l = (en: string, bn: string) => local(lang, en, bn);
-  const info = sectionDiscovery[section];
+  const info = siteConfig.seo.directories[section];
   const title = sections[section][lang];
   const path = '/' + lang + '/' + section;
   return <section className="directory home-directory" aria-labelledby={'featured-' + section}>
     <div className="section-head">
-      <div><h2 id={'featured-' + section}>{title}</h2><p>{l(info.description[0], info.description[1])}</p></div>
+      <div className="home-section-title"><RecordIcon section={section} data={{}} />
+        <div><h2 id={'featured-' + section}>{title}</h2><p>{l(info.description[0], info.description[1])}</p></div>
+      </div>
       <Link className="subtle" href={path}>{words[lang].browse} <span aria-hidden>↗</span></Link>
     </div>
     <Suspense>

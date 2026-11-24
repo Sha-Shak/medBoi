@@ -1,3 +1,4 @@
+import { siteOrigin } from '../../lib/site';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { type Document } from 'mongodb';
@@ -10,28 +11,27 @@ import { recordCard, strings } from '../../lib/record-card';
 export { strings } from '../../lib/record-card';
 import { imagePath } from '../../lib/media';
 import type { MedicineSearchMode } from '../../lib/catalogue';
-import { local, recordPath, sections, siteOrigin, words, type Language, type Section } from '../../lib/content';
+import { local, recordPath, sections, words, type Language, type Section } from '../../lib/content';
 
-export function Search({ lang, section, query = '', hero = false, mode = 'all', children }: {
-  lang: Language; section?: Section; query?: string; hero?: boolean; mode?: MedicineSearchMode; children?: ReactNode;
+export function Search({ lang, section, query = '', hero = false, mode = 'all', scope, children }: {
+  lang: Language; section?: Section; query?: string; hero?: boolean; mode?: MedicineSearchMode; scope?: Section[]; children?: ReactNode;
 }) {
   const t = words[lang];
   return <form action={'/' + lang + '/' + (section ?? 'search')} role="search">
-    <div className={hero ? 'search hero-search' : 'search'}>
-    <span className="magnify" aria-hidden />
-    <SearchInput key={query} lang={lang} section={section} label={t.search} initial={query}
+    <SearchInput key={JSON.stringify([query, scope])} lang={lang} section={section} label={t.search}
+      initial={query} hero={hero} scope={scope}
       placeholder={section === 'medicines' ? t.placeholder
         : section === 'doctors' ? local(lang, 'Doctor, specialty or chamber', 'চিকিৎসক, বিশেষত্ব বা চেম্বার')
         : section === 'tests' ? local(lang, 'Test name or abbreviation', 'পরীক্ষার নাম বা সংক্ষিপ্ত রূপ')
         : section === 'facilities' ? local(lang, 'Hospital, area or DGHS code', 'হাসপাতাল, এলাকা বা ডিজিএইচএস কোড')
-        : local(lang, 'Medicine, doctor, test or hospital', 'ওষুধ, চিকিৎসক, পরীক্ষা বা হাসপাতাল')} />
+        : local(lang, 'Search the directory', 'নির্দেশিকায় খুঁজুন')}>
     {section === 'medicines' && <select className="medicine-search-mode" name="mode" aria-label={local(lang, 'Search medicines by', 'ওষুধ খোঁজার ধরন')} defaultValue={mode}>
       <option value="all">{local(lang, 'All fields', 'সব তথ্য')}</option>
       <option value="brand">{local(lang, 'Brand', 'ব্র্যান্ড')}</option>
       <option value="generic">{local(lang, 'Generic', 'জেনেরিক')}</option>
     </select>}
     <button type="submit">{t.search}</button>
-    </div>
+    </SearchInput>
     {children}
   </form>;
 }
@@ -41,8 +41,7 @@ export function RecordList({ lang, section, rows }: { lang: Language; section: S
     const name = lang === 'bn' && row.nameBn ? row.nameBn : row.name;
     const parts = [row.name !== name ? row.name : undefined, row.genericName, row.strength, row.dosageForm, row.manufacturerName,
       row.type, row.location?.district, row.chambers?.[0]?.name, ...strings(row.specialties).slice(0, 2), ...strings(row.categories).slice(0, 2)].filter(Boolean);
-    const photo = imagePath(section, row._id, row.picture);
-    const image = photo && section === 'doctors' ? photo + '?size=thumbnail' : photo;
+    const image = imagePath(section, row._id, row.picture);
     return <Link key={row._id} className="record glass" prefetch={false} href={recordPath(lang, section, row._id, row.name, row.strength)}>
       {image ? <Photo src={image} alt="" icon={<RecordIcon section={section} data={row} />} className={'result-photo ' + section} />
         : <RecordIcon section={section} data={row} />}

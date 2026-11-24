@@ -1,7 +1,8 @@
+import { siteOrigin } from '../../../../lib/site';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { doctorsAtFacility, getGenericInformation, getPriceFacilities, getRecord, relatedMedicines } from '../../../../lib/catalogue';
-import { isLanguage, isSection, local, recordPath, sections, siteOrigin, words, type Language } from '../../../../lib/content';
+import { isLanguage, isSection, local, recordPath, sections, words, type Language } from '../../../../lib/content';
 import { imagePath } from '../../../../lib/media';
 import { medicineSections, profileItems, publicText } from '../../../../lib/profile';
 import { jsonLd, seo } from '../../../../lib/seo';

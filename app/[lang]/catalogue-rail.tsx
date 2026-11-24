@@ -1,11 +1,32 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 export function CatalogueRail({ children, title, previous, next, activeKey }: {
   children: ReactNode; title: string; previous: string; next: string; activeKey?: string;
 }) {
   const track = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ previous: false, next: true });
+  useEffect(() => {
+    const node = track.current;
+    if (!node) return;
+    const update = () => {
+      const offset = Math.abs(node.scrollLeft);
+      const remaining = node.scrollWidth - node.clientWidth - offset;
+      const previous = offset > 2;
+      const next = remaining > 2;
+      setEdges(current => current.previous === previous && current.next === next ? current : { previous, next });
+    };
+    update();
+    node.addEventListener('scroll', update, { passive: true });
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(update) : undefined;
+    observer?.observe(node);
+    if (node.firstElementChild) observer?.observe(node.firstElementChild);
+    return () => {
+      node.removeEventListener('scroll', update);
+      observer?.disconnect();
+    };
+  }, [children]);
   useEffect(() => {
     const node = track.current;
     const active = node?.querySelector('[aria-current="true"]');
@@ -27,8 +48,10 @@ export function CatalogueRail({ children, title, previous, next, activeKey }: {
   }
   return <div className="rail-frame">
     <div className="rail-controls">
-      <button className="pill glass" type="button" aria-label={previous} onClick={() => scroll('previous')}>‹</button>
-      <button className="pill glass" type="button" aria-label={next} onClick={() => scroll('next')}>›</button>
+      <button className="pill glass" type="button" aria-label={previous} aria-disabled={!edges.previous}
+        onClick={() => { if (edges.previous) scroll('previous'); }}>‹</button>
+      <button className="pill glass" type="button" aria-label={next} aria-disabled={!edges.next}
+        onClick={() => { if (edges.next) scroll('next'); }}>›</button>
     </div>
     <div className="rail-track" ref={track} tabIndex={0} role="region" aria-label={title}>{children}</div>
   </div>;

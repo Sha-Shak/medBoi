@@ -15,8 +15,8 @@ export function RecordCards({ section, cards }: { section: Section; cards: Card[
             : <span className="catalogue-card-icon">{icon}</span>}
         </span>
         <span className="catalogue-card-copy">
-          {card.eyebrow && <span className="catalogue-card-tag">{card.eyebrow}</span>}
           <strong>{card.title}</strong>
+          {card.eyebrow && <span className="catalogue-card-tag">{card.eyebrow}</span>}
           {card.translation && <small lang="en">{card.translation}</small>}
           {card.details.map((value, index) => <small key={index}>{value}</small>)}
         </span>
